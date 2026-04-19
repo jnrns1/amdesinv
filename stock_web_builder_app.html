@@ -1,0 +1,1692 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AMDesigns · Inventory</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+    /* ── LOGIN PAGE ── */
+    .login-screen {
+      position: fixed;
+      inset: 0;
+      background: #0f172a;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 9999;
+    }
+
+    .login-screen.hidden { display: none; }
+
+    .login-box {
+      background: #1e293b;
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 20px;
+      padding: 44px 40px;
+      width: 100%;
+      max-width: 400px;
+      box-shadow: 0 25px 50px rgba(0,0,0,0.5);
+    }
+
+    .login-logo {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 32px;
+    }
+
+    .login-logo-icon {
+      width: 42px;
+      height: 42px;
+      background: #6366f1;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .login-logo-icon svg { width: 22px; height: 22px; fill: white; }
+
+    .login-logo-text { font-size: 20px; font-weight: 700; color: #fff; }
+    .login-logo-sub  { font-size: 12px; color: rgba(255,255,255,0.35); margin-top: 1px; }
+
+    .login-heading {
+      font-size: 22px;
+      font-weight: 700;
+      color: #fff;
+      margin-bottom: 6px;
+    }
+
+    .login-sub {
+      font-size: 13px;
+      color: rgba(255,255,255,0.4);
+      margin-bottom: 28px;
+    }
+
+    .login-field {
+      margin-bottom: 16px;
+    }
+
+    .login-label {
+      display: block;
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: rgba(255,255,255,0.4);
+      margin-bottom: 6px;
+    }
+
+    .login-input {
+      width: 100%;
+      padding: 11px 14px;
+      background: rgba(255,255,255,0.06);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 10px;
+      color: #fff;
+      font: inherit;
+      font-size: 14px;
+      outline: none;
+      transition: border 0.15s, background 0.15s;
+      box-sizing: border-box;
+    }
+
+    .login-input:focus {
+      border-color: #6366f1;
+      background: rgba(99,102,241,0.08);
+      box-shadow: 0 0 0 3px rgba(99,102,241,0.2);
+    }
+
+    .login-input::placeholder { color: rgba(255,255,255,0.2); }
+
+    .login-btn {
+      width: 100%;
+      padding: 12px;
+      background: #6366f1;
+      color: #fff;
+      border: none;
+      border-radius: 10px;
+      font: inherit;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      margin-top: 8px;
+      transition: background 0.15s, transform 0.1s;
+    }
+
+    .login-btn:hover { background: #4f46e5; }
+    .login-btn:active { transform: scale(0.98); }
+
+    .login-error {
+      background: rgba(239,68,68,0.12);
+      border: 1px solid rgba(239,68,68,0.3);
+      color: #fca5a5;
+      border-radius: 8px;
+      padding: 10px 14px;
+      font-size: 13px;
+      margin-bottom: 16px;
+      display: none;
+    }
+
+    .login-error.visible { display: block; }
+
+    :root {
+      --sidebar-bg: #0f172a;
+      --sidebar-width: 240px;
+      --accent: #6366f1;
+      --accent-hover: #4f46e5;
+      --accent-light: #eef2ff;
+      --bg: #f8fafc;
+      --card: #ffffff;
+      --border: #e2e8f0;
+      --text: #0f172a;
+      --muted: #64748b;
+      --muted-light: #94a3b8;
+      --good: #10b981;
+      --good-bg: #d1fae5;
+      --warn: #f59e0b;
+      --warn-bg: #fef3c7;
+      --bad: #ef4444;
+      --bad-bg: #fee2e2;
+      --radius: 12px;
+      --shadow: 0 1px 3px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.04);
+      --shadow-md: 0 4px 6px -1px rgba(0,0,0,0.07), 0 2px 4px -1px rgba(0,0,0,0.04);
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      color: var(--text);
+      background: var(--bg);
+      display: flex;
+      min-height: 100vh;
+      font-size: 14px;
+    }
+
+    /* ── SIDEBAR ── */
+    .sidebar {
+      width: var(--sidebar-width);
+      background: var(--sidebar-bg);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      position: fixed;
+      top: 0;
+      left: 0;
+      bottom: 0;
+      z-index: 100;
+      overflow-y: auto;
+    }
+
+    .sidebar-logo {
+      padding: 24px 20px 20px;
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+    }
+
+    .logo-mark {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .logo-icon {
+      width: 32px;
+      height: 32px;
+      background: var(--accent);
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .logo-icon svg { width: 18px; height: 18px; fill: white; }
+
+    .logo-text {
+      font-size: 15px;
+      font-weight: 700;
+      color: #fff;
+      line-height: 1.1;
+    }
+
+    .logo-sub {
+      font-size: 11px;
+      color: rgba(255,255,255,0.4);
+      font-weight: 400;
+      margin-top: 1px;
+    }
+
+    .sidebar-section {
+      padding: 16px 12px 8px;
+    }
+
+    .sidebar-label {
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: rgba(255,255,255,0.3);
+      font-weight: 600;
+      padding: 0 8px;
+      margin-bottom: 6px;
+    }
+
+    .nav-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 9px 10px;
+      border-radius: 8px;
+      color: rgba(255,255,255,0.55);
+      cursor: pointer;
+      font-size: 13.5px;
+      font-weight: 500;
+      transition: all 0.15s ease;
+      border: none;
+      background: none;
+      width: 100%;
+      text-align: left;
+      margin-bottom: 2px;
+    }
+
+    .nav-item:hover {
+      background: rgba(255,255,255,0.06);
+      color: rgba(255,255,255,0.85);
+    }
+
+    .nav-item.active {
+      background: rgba(99,102,241,0.2);
+      color: #a5b4fc;
+    }
+
+    .nav-item svg {
+      width: 16px;
+      height: 16px;
+      flex-shrink: 0;
+      opacity: 0.7;
+    }
+
+    .nav-item.active svg { opacity: 1; }
+
+    .nav-badge {
+      margin-left: auto;
+      background: rgba(99,102,241,0.3);
+      color: #a5b4fc;
+      font-size: 10px;
+      font-weight: 700;
+      padding: 2px 7px;
+      border-radius: 999px;
+    }
+
+    .sidebar-footer {
+      margin-top: auto;
+      padding: 16px 12px;
+      border-top: 1px solid rgba(255,255,255,0.06);
+    }
+
+    .sidebar-footer-btn {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 9px 10px;
+      border-radius: 8px;
+      color: rgba(255,255,255,0.4);
+      cursor: pointer;
+      font-size: 12.5px;
+      font-weight: 500;
+      background: none;
+      border: none;
+      width: 100%;
+      text-align: left;
+      transition: all 0.15s;
+    }
+
+    .sidebar-footer-btn:hover { color: rgba(255,255,255,0.7); background: rgba(255,255,255,0.05); }
+    .sidebar-footer-btn svg { width: 15px; height: 15px; }
+
+    /* ── MAIN AREA ── */
+    .main {
+      margin-left: var(--sidebar-width);
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+    }
+
+    .topbar {
+      background: var(--card);
+      border-bottom: 1px solid var(--border);
+      padding: 0 32px;
+      height: 60px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: sticky;
+      top: 0;
+      z-index: 50;
+    }
+
+    .topbar-title {
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--text);
+    }
+
+    .topbar-right {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 8px 14px;
+      border-radius: 8px;
+      font: inherit;
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.15s;
+      border: none;
+      text-decoration: none;
+    }
+
+    .btn-primary {
+      background: var(--accent);
+      color: white;
+    }
+
+    .btn-primary:hover { background: var(--accent-hover); }
+
+    .btn-secondary {
+      background: var(--card);
+      color: var(--text);
+      border: 1px solid var(--border);
+      box-shadow: var(--shadow);
+    }
+
+    .btn-secondary:hover { background: #f1f5f9; }
+
+    .btn-ghost {
+      background: transparent;
+      color: var(--muted);
+      border: 1px solid var(--border);
+    }
+
+    .btn-ghost:hover { background: var(--bg); color: var(--text); }
+
+    .btn-danger {
+      background: #fef2f2;
+      color: var(--bad);
+      border: 1px solid #fecaca;
+    }
+
+    .btn-danger:hover { background: #fee2e2; }
+
+    .btn svg { width: 14px; height: 14px; }
+
+    .file-btn { position: relative; overflow: hidden; }
+    .file-btn input[type="file"] {
+      position: absolute; inset: 0; opacity: 0; cursor: pointer; font-size: 0;
+    }
+
+    .content { padding: 28px 32px; flex: 1; }
+
+    .panel { display: none; }
+    .panel.active { display: block; }
+
+    /* ── PAGE HEADER ── */
+    .page-header {
+      margin-bottom: 24px;
+    }
+
+    .page-header h1 {
+      font-size: 20px;
+      font-weight: 700;
+      color: var(--text);
+      margin-bottom: 4px;
+    }
+
+    .page-header p {
+      color: var(--muted);
+      font-size: 13.5px;
+    }
+
+    /* ── METRIC CARDS ── */
+    .metrics-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+
+    .metric-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 20px;
+      box-shadow: var(--shadow);
+    }
+
+    .metric-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 12px;
+    }
+
+    .metric-label {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .metric-icon {
+      width: 32px;
+      height: 32px;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .metric-icon svg { width: 15px; height: 15px; }
+
+    .metric-icon.indigo { background: #eef2ff; color: var(--accent); }
+    .metric-icon.green { background: var(--good-bg); color: var(--good); }
+    .metric-icon.amber { background: var(--warn-bg); color: var(--warn); }
+    .metric-icon.red { background: var(--bad-bg); color: var(--bad); }
+
+    .metric-value {
+      font-size: 28px;
+      font-weight: 700;
+      color: var(--text);
+      line-height: 1;
+      margin-bottom: 4px;
+    }
+
+    .metric-note {
+      font-size: 12px;
+      color: var(--muted-light);
+    }
+
+    /* ── CARDS ── */
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+    }
+
+    .card-header {
+      padding: 16px 20px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    .card-title {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--text);
+    }
+
+    .card-body { padding: 0; }
+
+    .two-col {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+
+    /* ── TABLES ── */
+    .table-wrap {
+      overflow-x: auto;
+      border-radius: 0 0 var(--radius) var(--radius);
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+    }
+
+    th {
+      padding: 10px 16px;
+      text-align: left;
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--muted);
+      background: #f8fafc;
+      border-bottom: 1px solid var(--border);
+      white-space: nowrap;
+    }
+
+    td {
+      padding: 12px 16px;
+      border-bottom: 1px solid #f1f5f9;
+      color: var(--text);
+      vertical-align: middle;
+    }
+
+    tr:last-child td { border-bottom: none; }
+
+    tr:hover td { background: #fafbfc; }
+
+    .td-mono {
+      font-family: 'SF Mono', 'Fira Code', monospace;
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    /* ── STATUS BADGES ── */
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 3px 9px;
+      border-radius: 999px;
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.02em;
+    }
+
+    .badge::before {
+      content: '';
+      width: 5px;
+      height: 5px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+
+    .badge-green { background: var(--good-bg); color: #065f46; }
+    .badge-green::before { background: var(--good); }
+    .badge-amber { background: var(--warn-bg); color: #92400e; }
+    .badge-amber::before { background: var(--warn); }
+    .badge-red { background: var(--bad-bg); color: #991b1b; }
+    .badge-red::before { background: var(--bad); }
+    .badge-indigo { background: #eef2ff; color: #3730a3; }
+    .badge-indigo::before { background: var(--accent); }
+
+    /* ── SEARCH / FILTER BAR ── */
+    .filter-bar {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .search-wrap {
+      position: relative;
+    }
+
+    .search-wrap svg {
+      position: absolute;
+      left: 10px;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 14px;
+      height: 14px;
+      color: var(--muted-light);
+      pointer-events: none;
+    }
+
+    .search-input {
+      padding: 8px 12px 8px 32px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      background: var(--card);
+      font: inherit;
+      font-size: 13px;
+      color: var(--text);
+      width: 240px;
+      outline: none;
+      transition: border 0.15s;
+    }
+
+    .search-input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(99,102,241,0.1); }
+
+    input[type="text"], input[type="number"], input[type="date"], select {
+      padding: 8px 12px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      background: var(--card);
+      font: inherit;
+      font-size: 13px;
+      color: var(--text);
+      outline: none;
+      transition: border 0.15s;
+      width: 100%;
+    }
+
+    input:focus, select:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(99,102,241,0.1);
+    }
+
+    /* ── FORM GRID ── */
+    .form-section {
+      padding: 20px;
+      border-bottom: 1px solid var(--border);
+      background: #fafbfc;
+    }
+
+    .form-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 10px;
+      margin-bottom: 14px;
+    }
+
+    .form-label {
+      display: block;
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 4px;
+    }
+
+    .form-group { display: flex; flex-direction: column; }
+
+    /* ── EMPTY STATE ── */
+    .empty-state {
+      text-align: center;
+      padding: 48px 24px;
+      color: var(--muted);
+    }
+
+    .empty-state svg {
+      width: 40px;
+      height: 40px;
+      margin: 0 auto 12px;
+      opacity: 0.3;
+    }
+
+    .empty-state p { font-size: 13px; }
+
+    /* ── ALERT / STORAGE BAR ── */
+    .info-bar {
+      background: #fefce8;
+      border: 1px solid #fde68a;
+      border-radius: var(--radius);
+      padding: 14px 18px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-top: 24px;
+    }
+
+    .info-bar-left {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 13px;
+      color: #92400e;
+    }
+
+    .info-bar svg { width: 15px; height: 15px; flex-shrink: 0; }
+
+    /* ── TRANSACTION TYPE DOTS ── */
+    .tx-type {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 12px;
+      font-weight: 500;
+    }
+
+    .tx-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+
+    /* ── DIVIDER ── */
+    .section-gap { margin-bottom: 20px; }
+
+    /* ── RESPONSIVE ── */
+    @media (max-width: 1100px) {
+      :root { --sidebar-width: 60px; }
+      .logo-text, .logo-sub, .nav-item span, .sidebar-label,
+      .nav-badge, .sidebar-footer-btn span { display: none; }
+      .nav-item { justify-content: center; padding: 10px; }
+      .sidebar-footer-btn { justify-content: center; }
+      .logo-mark { justify-content: center; }
+      .content { padding: 20px 18px; }
+      .topbar { padding: 0 18px; }
+    }
+
+    @media (max-width: 900px) {
+      .metrics-grid { grid-template-columns: repeat(2, 1fr); }
+      .two-col { grid-template-columns: 1fr; }
+      .form-grid { grid-template-columns: repeat(2, 1fr); }
+    }
+
+    @media (max-width: 600px) {
+      .metrics-grid, .form-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ═══ LOGIN ═══ -->
+  <div class="login-screen" id="loginScreen">
+    <div class="login-box">
+      <div class="login-logo">
+        <div class="login-logo-icon">
+          <svg viewBox="0 0 24 24"><path d="M20 7H4a2 2 0 00-2 2v10a2 2 0 002 2h16a2 2 0 002-2V9a2 2 0 00-2-2zm-9 8H5v-2h6v2zm8 0h-6v-2h6v2zm0-4H5v-2h14v2zM4 3h16v2H4z"/></svg>
+        </div>
+        <div>
+          <div class="login-logo-text">AMDesigns</div>
+          <div class="login-logo-sub">Inventory System</div>
+        </div>
+      </div>
+
+      <div class="login-heading">Welcome back</div>
+      <div class="login-sub">Enter your password to access the dashboard.</div>
+
+      <div class="login-error" id="loginError">Incorrect password. Please try again.</div>
+
+      <div class="login-field">
+        <label class="login-label">Password</label>
+        <input class="login-input" type="password" id="loginPassword" placeholder="Enter password" autocomplete="current-password" />
+      </div>
+
+      <button class="login-btn" id="loginBtn">Sign In</button>
+    </div>
+  </div>
+
+  <!-- ═══ SIDEBAR ═══ -->
+  <nav class="sidebar">
+    <div class="sidebar-logo">
+      <div class="logo-mark">
+        <div class="logo-icon">
+          <svg viewBox="0 0 24 24"><path d="M20 7H4a2 2 0 00-2 2v10a2 2 0 002 2h16a2 2 0 002-2V9a2 2 0 00-2-2zm-9 8H5v-2h6v2zm8 0h-6v-2h6v2zm0-4H5v-2h14v2zM4 3h16v2H4z"/></svg>
+        </div>
+        <div>
+          <div class="logo-text">AMDesigns</div>
+          <div class="logo-sub">Inventory System</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="sidebar-section">
+      <div class="sidebar-label">Main</div>
+      <button class="nav-item active" data-tab="dashboard">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
+        <span>Dashboard</span>
+      </button>
+      <button class="nav-item" data-tab="catalog">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/></svg>
+        <span>Catalog</span>
+      </button>
+      <button class="nav-item" data-tab="transactions">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 3H5a2 2 0 00-2 2v16a2 2 0 002 2h14a2 2 0 002-2V5a2 2 0 00-2-2h-3M8 3a1 1 0 011-1h6a1 1 0 011 1v2H8V3z"/><path d="M12 11v6M9 14h6"/></svg>
+        <span>Transactions</span>
+      </button>
+      <button class="nav-item" data-tab="inventory">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>
+        <span>Live Inventory</span>
+        <span class="nav-badge" id="lowStockBadge">0</span>
+      </button>
+      <button class="nav-item" data-tab="shopify">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 001.99 1.61h9.72a2 2 0 001.98-1.71L23 6H6"/></svg>
+        <span>Shopify Export</span>
+      </button>
+    </div>
+
+    <div class="sidebar-footer">
+      <button class="sidebar-footer-btn" id="loadDemoBtn">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 102.13-9.36L1 10"/></svg>
+        <span>Load Demo Data</span>
+      </button>
+      <button class="sidebar-footer-btn btn-danger" id="resetAppBtn">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a1 1 0 011-1h4a1 1 0 011 1v2"/></svg>
+        <span>Reset All Data</span>
+      </button>
+    </div>
+  </nav>
+
+  <!-- ═══ MAIN ═══ -->
+  <div class="main">
+    <header class="topbar">
+      <span class="topbar-title" id="topbarTitle">Dashboard</span>
+      <div class="topbar-right">
+        <label class="btn btn-secondary file-btn">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+          Import Catalog
+          <input type="file" id="importCatalogInput" accept=".csv" />
+        </label>
+        <label class="btn btn-secondary file-btn">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+          Import Transactions
+          <input type="file" id="importTransactionsInput" accept=".csv" />
+        </label>
+        <button class="btn btn-primary" id="exportShopifyBtn">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          Export Shopify CSV
+        </button>
+      </div>
+    </header>
+
+    <div class="content">
+
+      <!-- ─ DASHBOARD ─ -->
+      <section class="panel active" data-panel="dashboard">
+        <div class="page-header">
+          <h1>Overview</h1>
+          <p>Movement-based inventory · Shopify SKU ready · Studio, Knokke, Warehouse</p>
+        </div>
+
+        <div class="metrics-grid" id="metricGrid"></div>
+
+        <div class="two-col">
+          <div class="card">
+            <div class="card-header">
+              <span class="card-title">⚠ Low Stock Alerts</span>
+            </div>
+            <div class="card-body">
+              <div class="table-wrap">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>SKU</th>
+                      <th>Product</th>
+                      <th>Total</th>
+                      <th>Reorder At</th>
+                      <th>Status</th>
+                    </tr>
+                  </thead>
+                  <tbody id="lowStockBody"></tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-header">
+              <span class="card-title">Recent Transactions</span>
+            </div>
+            <div class="card-body">
+              <div class="table-wrap">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>Date</th>
+                      <th>SKU</th>
+                      <th>Type</th>
+                      <th>Qty</th>
+                      <th>Location</th>
+                    </tr>
+                  </thead>
+                  <tbody id="recentTransactionsBody"></tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="info-bar">
+          <div class="info-bar-left">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+            Data is saved in your browser's localStorage. Export CSV regularly for backups.
+          </div>
+        </div>
+      </section>
+
+      <!-- ─ CATALOG ─ -->
+      <section class="panel" data-panel="catalog">
+        <div class="page-header">
+          <h1>Product Catalog</h1>
+          <p>Add and manage your SKUs, variants, pricing, and reorder points.</p>
+        </div>
+
+        <div class="card section-gap">
+          <div class="card-header">
+            <span class="card-title">Add / Edit Product</span>
+          </div>
+          <div class="form-section">
+            <div class="form-grid">
+              <div class="form-group">
+                <label class="form-label">SKU</label>
+                <input type="text" id="sku" placeholder="e.g. SKU-001" />
+              </div>
+              <div class="form-group">
+                <label class="form-label">Handle</label>
+                <input type="text" id="handle" placeholder="e.g. signature-soap" />
+              </div>
+              <div class="form-group">
+                <label class="form-label">Product Title</label>
+                <input type="text" id="product" placeholder="Product name" />
+              </div>
+              <div class="form-group">
+                <label class="form-label">Variant</label>
+                <input type="text" id="variant" placeholder="e.g. 500 ml" />
+              </div>
+              <div class="form-group">
+                <label class="form-label">Category</label>
+                <input type="text" id="category" placeholder="Category" />
+              </div>
+              <div class="form-group">
+                <label class="form-label">Vendor</label>
+                <input type="text" id="vendor" placeholder="Vendor" />
+              </div>
+              <div class="form-group">
+                <label class="form-label">Product Type</label>
+                <input type="text" id="productType" placeholder="Product type" />
+              </div>
+              <div class="form-group">
+                <label class="form-label">Option Name</label>
+                <input type="text" id="option1Name" value="Title" />
+              </div>
+              <div class="form-group">
+                <label class="form-label">Option Value</label>
+                <input type="text" id="option1Value" value="Default Title" />
+              </div>
+              <div class="form-group">
+                <label class="form-label">Barcode</label>
+                <input type="text" id="barcode" placeholder="Barcode" />
+              </div>
+              <div class="form-group">
+                <label class="form-label">Cost (€)</label>
+                <input type="number" id="cost" placeholder="0.00" step="0.01" />
+              </div>
+              <div class="form-group">
+                <label class="form-label">Retail Price (€)</label>
+                <input type="number" id="retailPrice" placeholder="0.00" step="0.01" />
+              </div>
+              <div class="form-group">
+                <label class="form-label">Reorder Point</label>
+                <input type="number" id="reorderPoint" placeholder="0" />
+              </div>
+              <div class="form-group">
+                <label class="form-label">Status</label>
+                <select id="active">
+                  <option value="Yes">Active</option>
+                  <option value="No">Inactive</option>
+                </select>
+              </div>
+            </div>
+            <button class="btn btn-primary" id="saveCatalogBtn">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+              Save to Catalog
+            </button>
+          </div>
+
+          <div class="card-header" style="border-top: 1px solid var(--border); border-bottom: none;">
+            <span class="card-title">All Products</span>
+            <div class="filter-bar">
+              <div class="search-wrap">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                <input class="search-input" id="catalogSearch" placeholder="Search SKU, product, handle…" />
+              </div>
+              <button class="btn btn-ghost" id="exportCatalogBtn">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                Export CSV
+              </button>
+            </div>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>SKU</th>
+                  <th>Handle</th>
+                  <th>Product</th>
+                  <th>Variant</th>
+                  <th>Category</th>
+                  <th>Vendor</th>
+                  <th>Retail</th>
+                  <th>Reorder</th>
+                  <th>Status</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody id="catalogBody"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- ─ TRANSACTIONS ─ -->
+      <section class="panel" data-panel="transactions">
+        <div class="page-header">
+          <h1>Transactions</h1>
+          <p>Log all stock movements — receipts, sales, transfers, adjustments.</p>
+        </div>
+
+        <div class="card section-gap">
+          <div class="card-header">
+            <span class="card-title">Log Transaction</span>
+          </div>
+          <div class="form-section">
+            <div class="form-grid">
+              <div class="form-group">
+                <label class="form-label">Date</label>
+                <input type="date" id="txDate" />
+              </div>
+              <div class="form-group">
+                <label class="form-label">SKU</label>
+                <select id="txSku"></select>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Movement Type</label>
+                <select id="txType">
+                  <option>Received</option>
+                  <option>Sold</option>
+                  <option>Transfer In</option>
+                  <option>Transfer Out</option>
+                  <option>Adjustment In</option>
+                  <option>Adjustment Out</option>
+                  <option>Return In</option>
+                  <option>Return Out</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Quantity</label>
+                <input type="number" id="txQty" min="1" placeholder="0" />
+              </div>
+              <div class="form-group">
+                <label class="form-label">Location</label>
+                <select id="txLocation">
+                  <option>Studio</option>
+                  <option>Knokke</option>
+                  <option>Warehouse</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Reference</label>
+                <input type="text" id="txReference" placeholder="PO-001, SALE-001…" />
+              </div>
+              <div class="form-group" style="grid-column: span 2;">
+                <label class="form-label">Notes</label>
+                <input type="text" id="txNotes" placeholder="Optional notes" />
+              </div>
+            </div>
+            <div style="display:flex; align-items:center; gap:12px; flex-wrap:wrap;">
+              <button class="btn btn-primary" id="saveTransactionBtn">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                Add Transaction
+              </button>
+              <span style="font-size:12px; color:var(--muted);">For transfers: log <strong>Transfer Out</strong> from source + <strong>Transfer In</strong> to destination.</span>
+            </div>
+          </div>
+
+          <div class="card-header" style="border-top: 1px solid var(--border); border-bottom: none;">
+            <span class="card-title">Transaction Log</span>
+            <div class="filter-bar">
+              <div class="search-wrap">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                <input class="search-input" id="transactionSearch" placeholder="Search SKU, reference, note…" />
+              </div>
+              <button class="btn btn-ghost" id="exportTransactionsBtn">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                Export CSV
+              </button>
+            </div>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Date</th>
+                  <th>SKU</th>
+                  <th>Type</th>
+                  <th>Qty</th>
+                  <th>±</th>
+                  <th>Location</th>
+                  <th>Reference</th>
+                  <th>Notes</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody id="transactionsBody"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- ─ LIVE INVENTORY ─ -->
+      <section class="panel" data-panel="inventory">
+        <div class="page-header">
+          <h1>Live Inventory</h1>
+          <p>Real-time stock levels calculated from all transactions.</p>
+        </div>
+
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title">Stock by Location</span>
+            <div class="filter-bar">
+              <div class="search-wrap">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                <input class="search-input" id="inventorySearch" placeholder="Search SKU or product…" />
+              </div>
+              <button class="btn btn-ghost" id="exportInventoryBtn">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                Export CSV
+              </button>
+            </div>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>SKU</th>
+                  <th>Product</th>
+                  <th>Variant</th>
+                  <th>Studio</th>
+                  <th>Knokke</th>
+                  <th>Warehouse</th>
+                  <th>Total</th>
+                  <th>Reorder At</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+              <tbody id="inventoryBody"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- ─ SHOPIFY EXPORT ─ -->
+      <section class="panel" data-panel="shopify">
+        <div class="page-header">
+          <h1>Shopify Export</h1>
+          <p>Preview and download the Shopify-ready product CSV with live inventory levels.</p>
+        </div>
+
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title">Export Preview</span>
+            <button class="btn btn-primary" id="downloadShopifyCsvBtn">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+              Download Shopify CSV
+            </button>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Handle</th>
+                  <th>Title</th>
+                  <th>Option1 Name</th>
+                  <th>Option1 Value</th>
+                  <th>SKU</th>
+                  <th>Price</th>
+                  <th>Cost</th>
+                  <th>Vendor</th>
+                  <th>Type</th>
+                  <th>Published</th>
+                  <th>Tracker</th>
+                  <th>Policy</th>
+                  <th>Status</th>
+                  <th>Studio</th>
+                  <th>Knokke</th>
+                  <th>Warehouse</th>
+                </tr>
+              </thead>
+              <tbody id="shopifyBody"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+    </div><!-- /content -->
+  </div><!-- /main -->
+
+  <script>
+    // ── LOGIN ──────────────────────────────────────────────────────────
+    // Valid passwords — mirror of passwords.txt
+    const VALID_PASSWORDS = [
+      'Amber@2026',
+      'StudioKnokke9',
+      'InvAccess#4',
+      'Warehouse77!',
+      'AMD-secure-12',
+      'Knokke$tock1',
+      'BlueLedger88',
+      'StockVault#3',
+      'Designs2026!',
+      'PrivateKey*55'
+    ];
+
+    const SESSION_KEY = 'am-inv-auth';
+
+    function checkLogin() {
+      return sessionStorage.getItem(SESSION_KEY) === 'true';
+    }
+
+    function showApp() {
+      document.getElementById('loginScreen').classList.add('hidden');
+    }
+
+    function attemptLogin() {
+      const pw  = document.getElementById('loginPassword').value;
+      const err = document.getElementById('loginError');
+      if (VALID_PASSWORDS.includes(pw)) {
+        sessionStorage.setItem(SESSION_KEY, 'true');
+        err.classList.remove('visible');
+        showApp();
+      } else {
+        err.classList.add('visible');
+        document.getElementById('loginPassword').value = '';
+        document.getElementById('loginPassword').focus();
+      }
+    }
+
+    document.getElementById('loginBtn').addEventListener('click', attemptLogin);
+    document.getElementById('loginPassword').addEventListener('keydown', e => {
+      if (e.key === 'Enter') attemptLogin();
+    });
+
+    // Show app immediately if already authenticated this session
+    if (checkLogin()) showApp();
+    else document.getElementById('loginPassword').focus();
+    // ──────────────────────────────────────────────────────────────────
+
+    const STORAGE_KEY = 'am-stock-control-v1';
+
+    const demoCatalog = [
+      { sku:'SKU-001', handle:'signature-soap', product:'Signature Soap', variant:'500 ml', category:'Body', vendor:'Your Brand', productType:'Body care', option1Name:'Size', option1Value:'500 ml', barcode:'', cost:18, retailPrice:39, reorderPoint:6, active:'Yes' },
+      { sku:'SKU-002', handle:'signature-soap', product:'Signature Soap', variant:'250 ml', category:'Body', vendor:'Your Brand', productType:'Body care', option1Name:'Size', option1Value:'250 ml', barcode:'', cost:11, retailPrice:24, reorderPoint:8, active:'Yes' },
+      { sku:'SKU-003', handle:'candle-stone', product:'Stone Candle', variant:'Standard', category:'Home', vendor:'Your Brand', productType:'Home fragrance', option1Name:'Title', option1Value:'Default Title', barcode:'', cost:22, retailPrice:48, reorderPoint:4, active:'Yes' }
+    ];
+
+    const demoTransactions = [
+      { date:'2026-04-16', sku:'SKU-001', movementType:'Received', qty:24, location:'Warehouse', reference:'PO-001', notes:'Initial stock' },
+      { date:'2026-04-16', sku:'SKU-002', movementType:'Received', qty:18, location:'Warehouse', reference:'PO-001', notes:'Initial stock' },
+      { date:'2026-04-16', sku:'SKU-003', movementType:'Received', qty:10, location:'Warehouse', reference:'PO-002', notes:'Initial stock' },
+      { date:'2026-04-16', sku:'SKU-001', movementType:'Transfer In', qty:6, location:'Studio', reference:'MOVE-001', notes:'From warehouse' },
+      { date:'2026-04-16', sku:'SKU-001', movementType:'Transfer Out', qty:6, location:'Warehouse', reference:'MOVE-001', notes:'To studio' },
+      { date:'2026-04-17', sku:'SKU-002', movementType:'Transfer In', qty:4, location:'Knokke', reference:'MOVE-002', notes:'From warehouse' },
+      { date:'2026-04-17', sku:'SKU-002', movementType:'Transfer Out', qty:4, location:'Warehouse', reference:'MOVE-002', notes:'To Knokke' },
+      { date:'2026-04-18', sku:'SKU-003', movementType:'Sold', qty:1, location:'Studio', reference:'SALE-001', notes:'Walk-in sale' }
+    ];
+
+    let state = loadState();
+
+    function loadState() {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if (!raw) return { catalog: [], transactions: [] };
+      try { return JSON.parse(raw); } catch { return { catalog: [], transactions: [] }; }
+    }
+
+    function saveState() { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }
+
+    function signedQty(type, qty) {
+      return ['Received','Transfer In','Adjustment In','Return In'].includes(type)
+        ? Number(qty||0) : -Number(qty||0);
+    }
+
+    function getInventoryLive() {
+      return state.catalog.filter(i => i.sku).map(item => {
+        const studio    = sumBy(item.sku, 'Studio');
+        const knokke    = sumBy(item.sku, 'Knokke');
+        const warehouse = sumBy(item.sku, 'Warehouse');
+        const total     = studio + knokke + warehouse;
+        const reorder   = Number(item.reorderPoint || 0);
+        const status    = total <= 0 ? 'Out of stock' : total <= reorder ? 'Reorder' : 'Healthy';
+        return { sku: item.sku, product: item.product, variant: item.variant,
+          studio, knokke, warehouse, total, reorderPoint: reorder, status,
+          handle: item.handle, cost: Number(item.cost||0),
+          retailPrice: Number(item.retailPrice||0), active: item.active };
+      });
+    }
+
+    function sumBy(sku, location) {
+      return state.transactions
+        .filter(tx => tx.sku === sku && tx.location === location)
+        .reduce((sum, tx) => sum + signedQty(tx.movementType, tx.qty), 0);
+    }
+
+    function getShopifyExportRows() {
+      const inventory = getInventoryLive();
+      return state.catalog.filter(i => i.active === 'Yes').map(item => {
+        const inv = inventory.find(x => x.sku === item.sku) || {};
+        return {
+          handle: item.handle, title: item.product,
+          option1Name: item.option1Name || 'Title',
+          option1Value: item.option1Value || 'Default Title',
+          variantSKU: item.sku, variantBarcode: item.barcode || '',
+          variantPrice: item.retailPrice || 0, costPerItem: item.cost || 0,
+          vendor: item.vendor || '', type: item.productType || '',
+          published: 'TRUE', inventoryTracker: 'shopify',
+          inventoryPolicy: 'deny', status: 'active',
+          studioAvailable: inv.studio || 0,
+          knokkeAvailable: inv.knokke || 0,
+          warehouseAvailable: inv.warehouse || 0
+        };
+      });
+    }
+
+    /* ── NAV ── */
+    const tabTitles = {
+      dashboard: 'Dashboard', catalog: 'Product Catalog',
+      transactions: 'Transactions', inventory: 'Live Inventory', shopify: 'Shopify Export'
+    };
+
+    document.querySelectorAll('.nav-item[data-tab]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active'));
+        document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+        btn.classList.add('active');
+        const key = btn.dataset.tab;
+        document.querySelector(`[data-panel="${key}"]`).classList.add('active');
+        document.getElementById('topbarTitle').textContent = tabTitles[key] || key;
+      });
+    });
+
+    /* ── RENDER DASHBOARD ── */
+    function renderDashboard() {
+      const inventory = getInventoryLive();
+      const activeSkus  = state.catalog.filter(x => x.active === 'Yes').length;
+      const units       = inventory.reduce((s,i) => s + i.total, 0);
+      const lowStock    = inventory.filter(x => x.status !== 'Healthy').length;
+      const stockValue  = inventory.reduce((s,i) => s + (i.total * i.cost), 0);
+
+      document.getElementById('lowStockBadge').textContent = lowStock;
+
+      document.getElementById('metricGrid').innerHTML = [
+        ['Active SKUs',     activeSkus,              'Live product count',         'indigo',
+         '<path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/>'],
+        ['Units on Hand',   units,                   'Across all locations',       'green',
+         '<path d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z"/>'],
+        ['Low Stock',       lowStock,                'Need reorder attention',     'amber',
+         '<path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>'],
+        ['Stock @ Cost',    fmtCur(stockValue),      'Estimated inventory value',  'indigo',
+         '<line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 100 7h5a3.5 3.5 0 110 7H6"/>']
+      ].map(([label, value, note, icon, svgPath]) => `
+        <div class="metric-card">
+          <div class="metric-header">
+            <span class="metric-label">${label}</span>
+            <span class="metric-icon ${icon}">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">${svgPath}</svg>
+            </span>
+          </div>
+          <div class="metric-value">${value}</div>
+          <div class="metric-note">${note}</div>
+        </div>
+      `).join('');
+
+      const low = inventory.filter(x => x.status !== 'Healthy').sort((a,b) => a.total - b.total).slice(0,8);
+      document.getElementById('lowStockBody').innerHTML = low.length
+        ? low.map(r => `<tr>
+            <td class="td-mono">${esc(r.sku)}</td>
+            <td>${esc(r.product||'')}</td>
+            <td><strong>${r.total}</strong></td>
+            <td>${r.reorderPoint}</td>
+            <td>${statusBadge(r.status)}</td>
+          </tr>`).join('')
+        : `<tr><td colspan="5"><div class="empty-state"><p>✓ All products are well-stocked</p></div></td></tr>`;
+
+      const recent = [...state.transactions].sort((a,b) => new Date(b.date)-new Date(a.date)).slice(0,8);
+      document.getElementById('recentTransactionsBody').innerHTML = recent.length
+        ? recent.map(tx => `<tr>
+            <td class="td-mono">${esc(tx.date||'')}</td>
+            <td class="td-mono">${esc(tx.sku||'')}</td>
+            <td>${txTypeBadge(tx.movementType)}</td>
+            <td><strong>${tx.qty}</strong></td>
+            <td>${esc(tx.location||'')}</td>
+          </tr>`).join('')
+        : `<tr><td colspan="5"><div class="empty-state"><p>No transactions yet</p></div></td></tr>`;
+    }
+
+    /* ── RENDER CATALOG ── */
+    function renderCatalog() {
+      const q = document.getElementById('catalogSearch').value.trim().toLowerCase();
+      const rows = state.catalog.filter(item => !q || [item.sku,item.handle,item.product,item.variant,item.vendor].join(' ').toLowerCase().includes(q));
+      document.getElementById('catalogBody').innerHTML = rows.length
+        ? rows.map((item, idx) => `<tr>
+            <td class="td-mono">${esc(item.sku||'')}</td>
+            <td class="td-mono">${esc(item.handle||'')}</td>
+            <td><strong>${esc(item.product||'')}</strong></td>
+            <td>${esc(item.variant||'')}</td>
+            <td>${esc(item.category||'')}</td>
+            <td>${esc(item.vendor||'')}</td>
+            <td>${fmtCur(item.retailPrice||0)}</td>
+            <td>${item.reorderPoint||0}</td>
+            <td>${item.active==='Yes'
+              ? '<span class="badge badge-green">Active</span>'
+              : '<span class="badge badge-red">Inactive</span>'}</td>
+            <td><button class="btn btn-ghost" style="padding:5px 10px;font-size:12px;" onclick="removeCatalogRow(${idx})">Delete</button></td>
+          </tr>`).join('')
+        : `<tr><td colspan="10"><div class="empty-state"><p>No catalog items found</p></div></td></tr>`;
+      fillSkuSelect();
+    }
+
+    /* ── RENDER TRANSACTIONS ── */
+    function renderTransactions() {
+      const q = document.getElementById('transactionSearch').value.trim().toLowerCase();
+      const rows = [...state.transactions].filter(tx => !q || [tx.date,tx.sku,tx.movementType,tx.location,tx.reference,tx.notes].join(' ').toLowerCase().includes(q))
+        .sort((a,b) => new Date(b.date)-new Date(a.date));
+      document.getElementById('transactionsBody').innerHTML = rows.length
+        ? rows.map((tx, idx) => `<tr>
+            <td class="td-mono">${esc(tx.date||'')}</td>
+            <td class="td-mono">${esc(tx.sku||'')}</td>
+            <td>${txTypeBadge(tx.movementType)}</td>
+            <td><strong>${tx.qty}</strong></td>
+            <td style="color:${signedQty(tx.movementType,tx.qty)>=0?'var(--good)':'var(--bad)'}; font-weight:600;">
+              ${signedQty(tx.movementType,tx.qty)>=0?'+':''}${signedQty(tx.movementType,tx.qty)}
+            </td>
+            <td>${esc(tx.location||'')}</td>
+            <td class="td-mono">${esc(tx.reference||'')}</td>
+            <td>${esc(tx.notes||'')}</td>
+            <td><button class="btn btn-ghost" style="padding:5px 10px;font-size:12px;" onclick="removeTransactionRow(${idx})">Delete</button></td>
+          </tr>`).join('')
+        : `<tr><td colspan="9"><div class="empty-state"><p>No transactions found</p></div></td></tr>`;
+    }
+
+    /* ── RENDER INVENTORY ── */
+    function renderInventory() {
+      const q = document.getElementById('inventorySearch').value.trim().toLowerCase();
+      const rows = getInventoryLive().filter(item => !q || [item.sku,item.product,item.variant].join(' ').toLowerCase().includes(q));
+      document.getElementById('inventoryBody').innerHTML = rows.length
+        ? rows.map(item => `<tr>
+            <td class="td-mono">${esc(item.sku||'')}</td>
+            <td><strong>${esc(item.product||'')}</strong></td>
+            <td>${esc(item.variant||'')}</td>
+            <td>${item.studio}</td>
+            <td>${item.knokke}</td>
+            <td>${item.warehouse}</td>
+            <td><strong>${item.total}</strong></td>
+            <td>${item.reorderPoint}</td>
+            <td>${statusBadge(item.status)}</td>
+          </tr>`).join('')
+        : `<tr><td colspan="9"><div class="empty-state"><p>No inventory data</p></div></td></tr>`;
+    }
+
+    /* ── RENDER SHOPIFY ── */
+    function renderShopify() {
+      const rows = getShopifyExportRows();
+      document.getElementById('shopifyBody').innerHTML = rows.length
+        ? rows.map(row => `<tr>
+            <td class="td-mono">${esc(row.handle)}</td>
+            <td>${esc(row.title)}</td>
+            <td>${esc(row.option1Name)}</td>
+            <td>${esc(row.option1Value)}</td>
+            <td class="td-mono">${esc(row.variantSKU)}</td>
+            <td>${fmtCur(row.variantPrice)}</td>
+            <td>${fmtCur(row.costPerItem)}</td>
+            <td>${esc(row.vendor)}</td>
+            <td>${esc(row.type)}</td>
+            <td>${row.published}</td>
+            <td>${row.inventoryTracker}</td>
+            <td>${row.inventoryPolicy}</td>
+            <td><span class="badge badge-green">${row.status}</span></td>
+            <td>${row.studioAvailable}</td>
+            <td>${row.knokkeAvailable}</td>
+            <td>${row.warehouseAvailable}</td>
+          </tr>`).join('')
+        : `<tr><td colspan="16"><div class="empty-state"><p>No active products for Shopify export</p></div></td></tr>`;
+    }
+
+    function renderAll() {
+      saveState();
+      renderDashboard();
+      renderCatalog();
+      renderTransactions();
+      renderInventory();
+      renderShopify();
+    }
+
+    /* ── HELPERS ── */
+    function statusBadge(status) {
+      if (status === 'Healthy')       return `<span class="badge badge-green">${status}</span>`;
+      if (status === 'Reorder')       return `<span class="badge badge-amber">${status}</span>`;
+      return `<span class="badge badge-red">${status}</span>`;
+    }
+
+    function txTypeBadge(type) {
+      const color = ['Received','Transfer In','Adjustment In','Return In'].includes(type) ? 'var(--good)' : 'var(--bad)';
+      return `<span class="tx-type"><span class="tx-dot" style="background:${color}"></span>${esc(type||'')}</span>`;
+    }
+
+    function fmtCur(v) {
+      return new Intl.NumberFormat('en-BE', { style: 'currency', currency: 'EUR' }).format(Number(v||0));
+    }
+
+    function esc(str) {
+      return String(str??'').replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;').replaceAll('"','&quot;').replaceAll("'",'&#39;');
+    }
+
+    function formVal(id) { return document.getElementById(id).value.trim(); }
+
+    function fillSkuSelect() {
+      const sel = document.getElementById('txSku');
+      const cur = sel.value;
+      sel.innerHTML = state.catalog.length
+        ? state.catalog.map(i => `<option value="${esc(i.sku)}">${esc(i.sku)} – ${esc(i.product||'')}</option>`).join('')
+        : '<option value="">No SKUs yet</option>';
+      if ([...sel.options].some(o => o.value === cur)) sel.value = cur;
+    }
+
+    /* ── SAVE CATALOG ── */
+    document.getElementById('saveCatalogBtn').addEventListener('click', () => {
+      const row = {
+        sku: formVal('sku'), handle: formVal('handle'), product: formVal('product'),
+        variant: formVal('variant'), category: formVal('category'), vendor: formVal('vendor'),
+        productType: formVal('productType'),
+        option1Name: formVal('option1Name')||'Title',
+        option1Value: formVal('option1Value')||'Default Title',
+        barcode: formVal('barcode'),
+        cost: Number(document.getElementById('cost').value||0),
+        retailPrice: Number(document.getElementById('retailPrice').value||0),
+        reorderPoint: Number(document.getElementById('reorderPoint').value||0),
+        active: document.getElementById('active').value
+      };
+      if (!row.sku||!row.handle||!row.product) { alert('Please fill SKU, handle, and product title.'); return; }
+      const idx = state.catalog.findIndex(i => i.sku === row.sku);
+      if (idx >= 0) state.catalog[idx] = row; else state.catalog.unshift(row);
+      ['sku','handle','product','variant','category','vendor','productType','barcode','cost','retailPrice','reorderPoint'].forEach(id => document.getElementById(id).value='');
+      document.getElementById('option1Name').value='Title';
+      document.getElementById('option1Value').value='Default Title';
+      document.getElementById('active').value='Yes';
+      renderAll();
+    });
+
+    /* ── SAVE TRANSACTION ── */
+    document.getElementById('saveTransactionBtn').addEventListener('click', () => {
+      const row = {
+        date: document.getElementById('txDate').value,
+        sku: document.getElementById('txSku').value,
+        movementType: document.getElementById('txType').value,
+        qty: Number(document.getElementById('txQty').value||0),
+        location: document.getElementById('txLocation').value,
+        reference: formVal('txReference'), notes: formVal('txNotes')
+      };
+      if (!row.date||!row.sku||!row.qty) { alert('Please fill date, SKU, and quantity.'); return; }
+      state.transactions.unshift(row);
+      ['txQty','txReference','txNotes'].forEach(id => document.getElementById(id).value='');
+      renderAll();
+    });
+
+    /* ── DELETE ── */
+    window.removeCatalogRow = function(index) {
+      const q = document.getElementById('catalogSearch').value.trim().toLowerCase();
+      const filtered = state.catalog.filter(i => !q || [i.sku,i.handle,i.product,i.variant,i.vendor].join(' ').toLowerCase().includes(q));
+      const row = filtered[index];
+      state.catalog = state.catalog.filter(i => i !== row);
+      renderAll();
+    };
+
+    window.removeTransactionRow = function(index) {
+      const q = document.getElementById('transactionSearch').value.trim().toLowerCase();
+      const filtered = [...state.transactions].filter(tx => !q || [tx.date,tx.sku,tx.movementType,tx.location,tx.reference,tx.notes].join(' ').toLowerCase().includes(q)).sort((a,b) => new Date(b.date)-new Date(a.date));
+      const row = filtered[index];
+      state.transactions = state.transactions.filter(i => i !== row);
+      renderAll();
+    };
+
+    /* ── SEARCH ── */
+    document.getElementById('catalogSearch').addEventListener('input', renderCatalog);
+    document.getElementById('transactionSearch').addEventListener('input', renderTransactions);
+    document.getElementById('inventorySearch').addEventListener('input', renderInventory);
+
+    /* ── DEMO / RESET ── */
+    document.getElementById('loadDemoBtn').addEventListener('click', () => {
+      state = { catalog: structuredClone(demoCatalog), transactions: structuredClone(demoTransactions) };
+      renderAll();
+    });
+
+    document.getElementById('resetAppBtn').addEventListener('click', () => {
+      if (!confirm('Delete ALL saved data from this browser?')) return;
+      state = { catalog: [], transactions: [] };
+      renderAll();
+    });
+
+    /* ── CSV EXPORT ── */
+    function exportCsv(filename, rows) {
+      if (!rows.length) { alert('No rows to export.'); return; }
+      const headers = Object.keys(rows[0]);
+      const csv = [headers.join(',')].concat(rows.map(row => headers.map(h => csvCell(row[h])).join(','))).join('\n');
+      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a'); a.href=url; a.download=filename; a.click();
+      URL.revokeObjectURL(url);
+    }
+
+    function csvCell(v) {
+      const s = String(v??'');
+      return /[",\n]/.test(s) ? '"'+s.replaceAll('"','""')+'"' : s;
+    }
+
+    document.getElementById('exportCatalogBtn').addEventListener('click', () => exportCsv('catalog.csv', state.catalog));
+    document.getElementById('exportTransactionsBtn').addEventListener('click', () => exportCsv('transactions.csv', state.transactions.map(tx => ({...tx, signedQty: signedQty(tx.movementType, tx.qty)}))));
+    document.getElementById('exportInventoryBtn').addEventListener('click', () => exportCsv('inventory_live.csv', getInventoryLive()));
+    document.getElementById('exportShopifyBtn').addEventListener('click', () => exportCsv('shopify_export.csv', getShopifyExportRows()));
+    document.getElementById('downloadShopifyCsvBtn').addEventListener('click', () => exportCsv('shopify_export.csv', getShopifyExportRows()));
+
+    /* ── CSV IMPORT ── */
+    function parseCsv(text) {
+      const rows = []; let row=[], value='', i=0, inQ=false;
+      while(i<text.length){
+        const c=text[i], n=text[i+1];
+        if(inQ){if(c==='"'&&n==='"'){value+='"';i+=2;continue}if(c==='"'){inQ=false;i++;continue}value+=c;i++;continue}
+        if(c==='"'){inQ=true;i++;continue}
+        if(c===','){row.push(value);value='';i++;continue}
+        if(c==='\n'){row.push(value);rows.push(row);row=[];value='';i++;continue}
+        if(c==='\r'){i++;continue}
+        value+=c;i++;
+      }
+      row.push(value); rows.push(row);
+      const headers=rows.shift()||[];
+      return rows.filter(r=>r.some(c=>c!=='')).map(r=>Object.fromEntries(headers.map((h,i)=>[h,r[i]??''])));
+    }
+
+    function importCsv(file, type) {
+      const reader = new FileReader();
+      reader.onload = () => {
+        const rows = parseCsv(reader.result);
+        if(type==='catalog') {
+          state.catalog = rows.map(r => ({
+            sku: r.SKU||r.sku||'', handle: r.Handle||r.handle||'',
+            product: r.Product||r.product||r.Title||'', variant: r.Variant||r.variant||'',
+            category: r.Category||r.category||'', vendor: r.Vendor||r.vendor||'',
+            productType: r['Product Type']||r.productType||r.Type||'',
+            option1Name: r['Option1 Name']||r.option1Name||'Title',
+            option1Value: r['Option1 Value']||r.option1Value||'Default Title',
+            barcode: r.Barcode||r.barcode||'',
+            cost: Number(r.Cost||r['Cost per item']||r.cost||0),
+            retailPrice: Number(r['Retail Price']||r['Variant Price']||r.retailPrice||0),
+            reorderPoint: Number(r['Reorder Point']||r.reorderPoint||0),
+            active: r.Active||r.active||'Yes'
+          }));
+        }
+        if(type==='transactions') {
+          state.transactions = rows.map(r => ({
+            date: r.Date||r.date||'', sku: r.SKU||r.sku||r['Variant SKU']||'',
+            movementType: r['Movement Type']||r.movementType||'Received',
+            qty: Number(r.Qty||r.qty||0), location: r.Location||r.location||'Warehouse',
+            reference: r.Reference||r.reference||'', notes: r.Notes||r.notes||''
+          }));
+        }
+        renderAll();
+      };
+      reader.readAsText(file);
+    }
+
+    document.getElementById('importCatalogInput').addEventListener('change', e => { const f=e.target.files[0]; if(f) importCsv(f,'catalog'); e.target.value=''; });
+    document.getElementById('importTransactionsInput').addEventListener('change', e => { const f=e.target.files[0]; if(f) importCsv(f,'transactions'); e.target.value=''; });
+
+    document.getElementById('txDate').value = new Date().toISOString().slice(0,10);
+    fillSkuSelect();
+    renderAll();
+  </script>
+</body>
+</html>
