@@ -1,0 +1,1391 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AMDesigns · Inventory</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+    /* ── RESET ── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --sidebar-bg: #0f172a;
+      --sidebar-w: 240px;
+      --accent: #6366f1;
+      --accent-h: #4f46e5;
+      --bg: #f8fafc;
+      --card: #ffffff;
+      --border: #e2e8f0;
+      --text: #0f172a;
+      --muted: #64748b;
+      --muted2: #94a3b8;
+      --green: #10b981; --green-bg: #d1fae5;
+      --amber: #f59e0b; --amber-bg: #fef3c7;
+      --red:   #ef4444; --red-bg:   #fee2e2;
+      --radius: 12px;
+      --shadow: 0 1px 3px rgba(0,0,0,.08),0 1px 2px rgba(0,0,0,.04);
+    }
+
+    body {
+      font-family: 'Inter', -apple-system, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      font-size: 14px;
+      display: flex;
+      min-height: 100vh;
+    }
+
+    /* ════════════════════════════════
+       LOGIN
+    ════════════════════════════════ */
+    #loginScreen {
+      position: fixed; inset: 0;
+      background: #0f172a;
+      display: flex; align-items: center; justify-content: center;
+      z-index: 9999;
+    }
+    #loginScreen.hidden { display: none; }
+
+    .login-box {
+      background: #1e293b;
+      border: 1px solid rgba(255,255,255,.08);
+      border-radius: 20px;
+      padding: 44px 40px;
+      width: 100%; max-width: 400px;
+      box-shadow: 0 25px 50px rgba(0,0,0,.5);
+    }
+    .login-logo { display: flex; align-items: center; gap: 12px; margin-bottom: 32px; }
+    .login-logo-icon {
+      width: 42px; height: 42px; background: var(--accent);
+      border-radius: 10px; display: flex; align-items: center; justify-content: center;
+    }
+    .login-logo-icon svg { width: 22px; height: 22px; fill: white; }
+    .login-logo-name { font-size: 20px; font-weight: 700; color: #fff; }
+    .login-logo-sub  { font-size: 11px; color: rgba(255,255,255,.35); margin-top: 2px; }
+    .login-h { font-size: 22px; font-weight: 700; color: #fff; margin-bottom: 6px; }
+    .login-p { font-size: 13px; color: rgba(255,255,255,.4); margin-bottom: 28px; }
+    .login-err {
+      background: rgba(239,68,68,.12); border: 1px solid rgba(239,68,68,.3);
+      color: #fca5a5; border-radius: 8px; padding: 10px 14px;
+      font-size: 13px; margin-bottom: 16px; display: none;
+    }
+    .login-err.show { display: block; }
+    .login-label {
+      display: block; font-size: 11px; font-weight: 600;
+      text-transform: uppercase; letter-spacing: .06em;
+      color: rgba(255,255,255,.4); margin-bottom: 6px;
+    }
+    .login-input {
+      width: 100%; padding: 11px 14px;
+      background: rgba(255,255,255,.06);
+      border: 1px solid rgba(255,255,255,.1);
+      border-radius: 10px; color: #fff;
+      font: inherit; font-size: 14px; outline: none;
+      transition: border .15s, background .15s;
+      margin-bottom: 16px;
+    }
+    .login-input:focus {
+      border-color: var(--accent);
+      background: rgba(99,102,241,.08);
+      box-shadow: 0 0 0 3px rgba(99,102,241,.2);
+    }
+    .login-input::placeholder { color: rgba(255,255,255,.2); }
+    .login-btn {
+      width: 100%; padding: 12px;
+      background: var(--accent); color: #fff;
+      border: none; border-radius: 10px;
+      font: inherit; font-size: 14px; font-weight: 600;
+      cursor: pointer; transition: background .15s;
+    }
+    .login-btn:hover { background: var(--accent-h); }
+
+    /* ════════════════════════════════
+       LAYOUT
+    ════════════════════════════════ */
+    .sidebar {
+      width: var(--sidebar-w); background: var(--sidebar-bg);
+      min-height: 100vh; display: flex; flex-direction: column;
+      position: fixed; top: 0; left: 0; bottom: 0; z-index: 100;
+      overflow-y: auto;
+    }
+    .sb-logo {
+      padding: 22px 18px 18px;
+      border-bottom: 1px solid rgba(255,255,255,.06);
+    }
+    .sb-logo-row { display: flex; align-items: center; gap: 10px; }
+    .sb-logo-icon {
+      width: 32px; height: 32px; background: var(--accent);
+      border-radius: 8px; display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+    }
+    .sb-logo-icon svg { width: 17px; height: 17px; fill: white; }
+    .sb-logo-name { font-size: 15px; font-weight: 700; color: #fff; }
+    .sb-logo-sub  { font-size: 11px; color: rgba(255,255,255,.35); }
+    .sb-section { padding: 14px 10px 6px; }
+    .sb-label {
+      font-size: 10px; text-transform: uppercase; letter-spacing: .1em;
+      color: rgba(255,255,255,.3); font-weight: 600;
+      padding: 0 8px; margin-bottom: 4px;
+    }
+    .nav-item {
+      display: flex; align-items: center; gap: 10px;
+      padding: 9px 10px; border-radius: 8px;
+      color: rgba(255,255,255,.5); cursor: pointer;
+      font-size: 13.5px; font-weight: 500;
+      transition: all .15s; border: none; background: none;
+      width: 100%; text-align: left; margin-bottom: 2px;
+    }
+    .nav-item:hover { background: rgba(255,255,255,.06); color: rgba(255,255,255,.85); }
+    .nav-item.active { background: rgba(99,102,241,.2); color: #a5b4fc; }
+    .nav-item svg { width: 16px; height: 16px; flex-shrink: 0; opacity: .7; }
+    .nav-item.active svg { opacity: 1; }
+    .nav-badge {
+      margin-left: auto; background: rgba(239,68,68,.25); color: #fca5a5;
+      font-size: 10px; font-weight: 700; padding: 2px 7px; border-radius: 999px;
+    }
+    .nav-badge.hidden { display: none; }
+    .sb-footer {
+      margin-top: auto; padding: 14px 10px;
+      border-top: 1px solid rgba(255,255,255,.06);
+    }
+    .sb-foot-btn {
+      display: flex; align-items: center; gap: 10px;
+      padding: 9px 10px; border-radius: 8px;
+      color: rgba(255,255,255,.35); cursor: pointer;
+      font-size: 12.5px; font-weight: 500;
+      background: none; border: none; width: 100%;
+      text-align: left; transition: all .15s; margin-bottom: 2px;
+    }
+    .sb-foot-btn:hover { color: rgba(255,255,255,.65); background: rgba(255,255,255,.05); }
+    .sb-foot-btn svg { width: 15px; height: 15px; flex-shrink: 0; }
+
+    /* ════════════════════════════════
+       MAIN
+    ════════════════════════════════ */
+    .main { margin-left: var(--sidebar-w); flex: 1; display: flex; flex-direction: column; }
+
+    .topbar {
+      background: var(--card); border-bottom: 1px solid var(--border);
+      padding: 0 28px; height: 60px;
+      display: flex; align-items: center; justify-content: space-between;
+      position: sticky; top: 0; z-index: 50;
+    }
+    .topbar-title { font-size: 15px; font-weight: 600; }
+    .topbar-right { display: flex; align-items: center; gap: 8px; }
+
+    .content { padding: 26px 28px; flex: 1; }
+    .panel { display: none; }
+    .panel.active { display: block; }
+
+    /* ════════════════════════════════
+       BUTTONS
+    ════════════════════════════════ */
+    .btn {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 8px 14px; border-radius: 8px;
+      font: inherit; font-size: 13px; font-weight: 500;
+      cursor: pointer; transition: all .15s; border: none;
+    }
+    .btn svg { width: 14px; height: 14px; flex-shrink: 0; }
+    .btn-primary { background: var(--accent); color: white; }
+    .btn-primary:hover { background: var(--accent-h); }
+    .btn-secondary { background: var(--card); color: var(--text); border: 1px solid var(--border); box-shadow: var(--shadow); }
+    .btn-secondary:hover { background: #f1f5f9; }
+    .btn-ghost { background: transparent; color: var(--muted); border: 1px solid var(--border); }
+    .btn-ghost:hover { background: var(--bg); color: var(--text); }
+    .btn-danger { background: #fef2f2; color: var(--red); border: 1px solid #fecaca; }
+    .btn-danger:hover { background: var(--red-bg); }
+    .btn-green { background: var(--green-bg); color: #065f46; border: 1px solid #6ee7b7; }
+    .btn-green:hover { background: #a7f3d0; }
+    .btn-sm { padding: 5px 10px; font-size: 12px; }
+    .file-btn { position: relative; overflow: hidden; }
+    .file-btn input[type=file] { position: absolute; inset: 0; opacity: 0; cursor: pointer; font-size: 0; }
+
+    /* ════════════════════════════════
+       PAGE HEADER
+    ════════════════════════════════ */
+    .page-header { margin-bottom: 22px; }
+    .page-header h1 { font-size: 20px; font-weight: 700; margin-bottom: 3px; }
+    .page-header p { color: var(--muted); font-size: 13px; }
+
+    /* ════════════════════════════════
+       METRICS
+    ════════════════════════════════ */
+    .metrics { display: grid; grid-template-columns: repeat(4,1fr); gap: 14px; margin-bottom: 22px; }
+    .metric-card {
+      background: var(--card); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 18px; box-shadow: var(--shadow);
+    }
+    .metric-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
+    .metric-label { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .05em; color: var(--muted); }
+    .metric-icon { width: 30px; height: 30px; border-radius: 7px; display: flex; align-items: center; justify-content: center; }
+    .metric-icon svg { width: 14px; height: 14px; }
+    .metric-icon.indigo { background: #eef2ff; color: var(--accent); }
+    .metric-icon.green  { background: var(--green-bg); color: var(--green); }
+    .metric-icon.amber  { background: var(--amber-bg); color: var(--amber); }
+    .metric-icon.red    { background: var(--red-bg);   color: var(--red); }
+    .metric-val { font-size: 26px; font-weight: 700; line-height: 1; margin-bottom: 3px; }
+    .metric-note { font-size: 11px; color: var(--muted2); }
+
+    /* ════════════════════════════════
+       CARDS
+    ════════════════════════════════ */
+    .card { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); box-shadow: var(--shadow); }
+    .card-header {
+      padding: 14px 18px; border-bottom: 1px solid var(--border);
+      display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px;
+    }
+    .card-title { font-size: 14px; font-weight: 600; }
+    .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 22px; }
+    .mb { margin-bottom: 22px; }
+
+    /* ════════════════════════════════
+       TABLES
+    ════════════════════════════════ */
+    .tbl-wrap { overflow-x: auto; border-radius: 0 0 var(--radius) var(--radius); }
+    table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    th {
+      padding: 9px 14px; text-align: left;
+      font-size: 10.5px; font-weight: 600; text-transform: uppercase;
+      letter-spacing: .06em; color: var(--muted);
+      background: #f8fafc; border-bottom: 1px solid var(--border);
+      white-space: nowrap;
+    }
+    td { padding: 11px 14px; border-bottom: 1px solid #f1f5f9; vertical-align: middle; }
+    tr:last-child td { border-bottom: none; }
+    tr:hover td { background: #fafbfc; }
+    .mono { font-family: 'SF Mono','Fira Code',monospace; font-size: 11.5px; color: var(--muted); }
+    .empty-row td { text-align: center; color: var(--muted2); padding: 36px; font-size: 13px; }
+
+    /* ════════════════════════════════
+       BADGES
+    ════════════════════════════════ */
+    .badge {
+      display: inline-flex; align-items: center; gap: 4px;
+      padding: 3px 9px; border-radius: 999px;
+      font-size: 11px; font-weight: 600;
+    }
+    .badge::before { content:''; width:5px; height:5px; border-radius:50%; flex-shrink:0; }
+    .badge-green { background: var(--green-bg); color: #065f46; }
+    .badge-green::before { background: var(--green); }
+    .badge-amber { background: var(--amber-bg); color: #92400e; }
+    .badge-amber::before { background: var(--amber); }
+    .badge-red   { background: var(--red-bg);   color: #991b1b; }
+    .badge-red::before   { background: var(--red); }
+
+    /* ════════════════════════════════
+       FORMS
+    ════════════════════════════════ */
+    .form-section { padding: 18px; background: #fafbfc; border-bottom: 1px solid var(--border); }
+    .form-grid { display: grid; grid-template-columns: repeat(4,1fr); gap: 10px; margin-bottom: 14px; }
+    .form-grid-3 { display: grid; grid-template-columns: repeat(3,1fr); gap: 10px; margin-bottom: 14px; }
+    .field { display: flex; flex-direction: column; gap: 4px; }
+    .field label { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .05em; color: var(--muted); }
+    input[type=text], input[type=number], input[type=date], select, textarea {
+      padding: 8px 11px; border: 1px solid var(--border); border-radius: 8px;
+      background: var(--card); font: inherit; font-size: 13px; color: var(--text);
+      outline: none; transition: border .15s; width: 100%;
+    }
+    input:focus, select:focus, textarea:focus {
+      border-color: var(--accent); box-shadow: 0 0 0 3px rgba(99,102,241,.1);
+    }
+    .search-wrap { position: relative; }
+    .search-wrap svg { position: absolute; left: 9px; top: 50%; transform: translateY(-50%); width: 13px; height: 13px; color: var(--muted2); pointer-events: none; }
+    .search-input { padding-left: 30px !important; width: 220px; }
+
+    /* ════════════════════════════════
+       INLINE QTY EDITOR
+    ════════════════════════════════ */
+    .qty-cell { display: flex; align-items: center; gap: 6px; }
+    .qty-val { font-weight: 700; min-width: 28px; text-align: center; }
+    .qty-btn {
+      width: 24px; height: 24px; border-radius: 6px; border: 1px solid var(--border);
+      background: var(--card); cursor: pointer; display: flex; align-items: center; justify-content: center;
+      font-size: 15px; font-weight: 700; color: var(--muted); transition: all .15s; line-height: 1;
+      flex-shrink: 0;
+    }
+    .qty-btn:hover { background: var(--accent); color: white; border-color: var(--accent); }
+    .qty-btn.minus:hover { background: var(--red); border-color: var(--red); }
+
+    /* ════════════════════════════════
+       MODAL
+    ════════════════════════════════ */
+    .modal-overlay {
+      position: fixed; inset: 0; background: rgba(15,23,42,.6);
+      display: flex; align-items: center; justify-content: center;
+      z-index: 500; backdrop-filter: blur(3px);
+    }
+    .modal-overlay.hidden { display: none; }
+    .modal {
+      background: var(--card); border-radius: 16px; padding: 28px;
+      width: 100%; max-width: 520px; box-shadow: 0 20px 60px rgba(0,0,0,.2);
+    }
+    .modal-title { font-size: 16px; font-weight: 700; margin-bottom: 4px; }
+    .modal-sub   { font-size: 13px; color: var(--muted); margin-bottom: 22px; }
+    .modal-footer { display: flex; justify-content: flex-end; gap: 8px; margin-top: 20px; }
+
+    /* ════════════════════════════════
+       TOAST
+    ════════════════════════════════ */
+    #toastWrap {
+      position: fixed; bottom: 24px; right: 24px;
+      display: flex; flex-direction: column; gap: 8px; z-index: 9000;
+    }
+    .toast {
+      background: #1e293b; color: #f8fafc;
+      padding: 12px 18px; border-radius: 10px; font-size: 13px;
+      box-shadow: 0 8px 24px rgba(0,0,0,.25);
+      display: flex; align-items: center; gap: 10px;
+      animation: slideIn .2s ease;
+      border-left: 3px solid var(--accent);
+    }
+    .toast.success { border-color: var(--green); }
+    .toast.error   { border-color: var(--red); }
+    @keyframes slideIn { from { opacity:0; transform: translateX(20px); } to { opacity:1; transform: translateX(0); } }
+
+    /* ════════════════════════════════
+       SYNC PANEL
+    ════════════════════════════════ */
+    .sync-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    .sync-card {
+      background: var(--card); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 22px;
+    }
+    .sync-icon {
+      width: 40px; height: 40px; border-radius: 10px;
+      display: flex; align-items: center; justify-content: center; margin-bottom: 14px;
+    }
+    .sync-icon svg { width: 20px; height: 20px; }
+    .sync-icon.upload { background: #eef2ff; color: var(--accent); }
+    .sync-icon.download { background: var(--green-bg); color: var(--green); }
+    .sync-icon.reset { background: var(--red-bg); color: var(--red); }
+    .sync-icon.demo { background: var(--amber-bg); color: var(--amber); }
+    .sync-card h3 { font-size: 14px; font-weight: 600; margin-bottom: 5px; }
+    .sync-card p { font-size: 12.5px; color: var(--muted); margin-bottom: 14px; line-height: 1.5; }
+
+    /* ════════════════════════════════
+       RESPONSIVE
+    ════════════════════════════════ */
+    @media (max-width: 1100px) {
+      :root { --sidebar-w: 58px; }
+      .sb-logo-name, .sb-logo-sub, .nav-item span,
+      .sb-label, .nav-badge, .sb-foot-btn span { display: none; }
+      .nav-item, .sb-foot-btn { justify-content: center; padding: 10px; }
+      .sb-logo-row { justify-content: center; }
+      .content { padding: 18px; }
+      .topbar { padding: 0 16px; }
+    }
+    @media (max-width: 900px) {
+      .metrics { grid-template-columns: repeat(2,1fr); }
+      .two-col, .sync-grid { grid-template-columns: 1fr; }
+      .form-grid { grid-template-columns: repeat(2,1fr); }
+    }
+    @media (max-width: 600px) {
+      .metrics, .form-grid, .form-grid-3 { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ════ LOGIN ════ -->
+<div id="loginScreen">
+  <div class="login-box">
+    <div class="login-logo">
+      <div class="login-logo-icon">
+        <svg viewBox="0 0 24 24"><path d="M20 7H4a2 2 0 00-2 2v10a2 2 0 002 2h16a2 2 0 002-2V9a2 2 0 00-2-2zm-9 8H5v-2h6v2zm8 0h-6v-2h6v2zm0-4H5v-2h14v2zM4 3h16v2H4z"/></svg>
+      </div>
+      <div>
+        <div class="login-logo-name">AMDesigns</div>
+        <div class="login-logo-sub">Inventory System</div>
+      </div>
+    </div>
+    <div class="login-h">Welcome back</div>
+    <div class="login-p">Enter your password to access the dashboard.</div>
+    <div class="login-err" id="loginErr">Incorrect password. Please try again.</div>
+    <label class="login-label">Password</label>
+    <input class="login-input" type="password" id="loginPw" placeholder="Enter password" autocomplete="current-password" />
+    <button class="login-btn" id="loginBtn">Sign In →</button>
+  </div>
+</div>
+
+<!-- ════ SIDEBAR ════ -->
+<nav class="sidebar">
+  <div class="sb-logo">
+    <div class="sb-logo-row">
+      <div class="sb-logo-icon">
+        <svg viewBox="0 0 24 24"><path d="M20 7H4a2 2 0 00-2 2v10a2 2 0 002 2h16a2 2 0 002-2V9a2 2 0 00-2-2zm-9 8H5v-2h6v2zm8 0h-6v-2h6v2zm0-4H5v-2h14v2zM4 3h16v2H4z"/></svg>
+      </div>
+      <div>
+        <div class="sb-logo-name">AMDesigns</div>
+        <div class="sb-logo-sub">Inventory</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="sb-section">
+    <div class="sb-label">Menu</div>
+    <button class="nav-item active" data-tab="dashboard">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
+      <span>Dashboard</span>
+    </button>
+    <button class="nav-item" data-tab="inventory">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>
+      <span>Live Inventory</span>
+      <span class="nav-badge hidden" id="lowBadge">0</span>
+    </button>
+    <button class="nav-item" data-tab="catalog">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/></svg>
+      <span>Products</span>
+    </button>
+    <button class="nav-item" data-tab="transactions">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 3H5a2 2 0 00-2 2v16a2 2 0 002 2h14a2 2 0 002-2V5a2 2 0 00-2-2h-3M8 3a1 1 0 011-1h6a1 1 0 011 1v2H8V3z"/></svg>
+      <span>Transactions</span>
+    </button>
+    <button class="nav-item" data-tab="sync">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="1 4 1 10 7 10"/><polyline points="23 20 23 14 17 14"/><path d="M20.49 9A9 9 0 005.64 5.64L1 10m22 4l-4.64 4.36A9 9 0 013.51 15"/></svg>
+      <span>Excel Sync</span>
+    </button>
+  </div>
+
+  <div class="sb-footer">
+    <button class="sb-foot-btn" id="logoutBtn">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+      <span>Sign Out</span>
+    </button>
+  </div>
+</nav>
+
+<!-- ════ MAIN ════ -->
+<div class="main">
+  <header class="topbar">
+    <span class="topbar-title" id="topbarTitle">Dashboard</span>
+    <div class="topbar-right">
+      <button class="btn btn-secondary" id="exportXlsxBtn">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        Export Excel
+      </button>
+    </div>
+  </header>
+
+  <div class="content">
+
+    <!-- ── DASHBOARD ── -->
+    <section class="panel active" data-panel="dashboard">
+      <div class="page-header">
+        <h1>Overview</h1>
+        <p>Live stock levels across all locations — updates instantly when you edit.</p>
+      </div>
+      <div class="metrics" id="metricsGrid"></div>
+      <div class="two-col">
+        <div class="card">
+          <div class="card-header"><span class="card-title">⚠ Low Stock</span></div>
+          <div class="tbl-wrap">
+            <table><thead><tr><th>SKU</th><th>Product</th><th>Total</th><th>Reorder At</th><th>Status</th></tr></thead>
+            <tbody id="lowStockBody"></tbody></table>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-header"><span class="card-title">Recent Transactions</span></div>
+          <div class="tbl-wrap">
+            <table><thead><tr><th>Date</th><th>SKU</th><th>Type</th><th>Qty</th><th>Location</th></tr></thead>
+            <tbody id="recentTxBody"></tbody></table>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ── LIVE INVENTORY ── -->
+    <section class="panel" data-panel="inventory">
+      <div class="page-header">
+        <h1>Live Inventory</h1>
+        <p>Click <strong>+</strong> or <strong>−</strong> on any row to add or remove stock instantly.</p>
+      </div>
+      <div class="card">
+        <div class="card-header">
+          <span class="card-title">Stock by Location</span>
+          <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+            <div class="search-wrap">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+              <input class="search-input" type="text" id="invSearch" placeholder="Search…" />
+            </div>
+            <select id="invLocFilter" style="width:auto;padding:8px 11px;">
+              <option value="">All locations</option>
+              <option>Studio</option><option>Knokke</option><option>Warehouse</option>
+            </select>
+          </div>
+        </div>
+        <div class="tbl-wrap">
+          <table>
+            <thead><tr>
+              <th>SKU</th><th>Product</th><th>Variant</th>
+              <th>Studio</th><th>Knokke</th><th>Warehouse</th>
+              <th>Total</th><th>Reorder At</th><th>Status</th>
+            </tr></thead>
+            <tbody id="invBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- ── PRODUCTS / CATALOG ── -->
+    <section class="panel" data-panel="catalog">
+      <div class="page-header">
+        <h1>Products</h1>
+        <p>Add, edit, or remove products from your catalog.</p>
+      </div>
+
+      <!-- Add / Edit form -->
+      <div class="card mb" id="catalogFormCard">
+        <div class="card-header">
+          <span class="card-title" id="catalogFormTitle">Add Product</span>
+          <button class="btn btn-ghost btn-sm" id="cancelEditBtn" style="display:none;">Cancel edit</button>
+        </div>
+        <div class="form-section">
+          <div class="form-grid">
+            <div class="field"><label>SKU *</label><input type="text" id="f_sku" placeholder="SKU-001" /></div>
+            <div class="field"><label>Product Name *</label><input type="text" id="f_product" placeholder="Signature Soap" /></div>
+            <div class="field"><label>Variant</label><input type="text" id="f_variant" placeholder="500 ml" /></div>
+            <div class="field"><label>Category</label><input type="text" id="f_category" placeholder="Body" /></div>
+            <div class="field"><label>Vendor</label><input type="text" id="f_vendor" placeholder="Your Brand" /></div>
+            <div class="field"><label>Cost (€)</label><input type="number" id="f_cost" placeholder="0.00" step="0.01" min="0" /></div>
+            <div class="field"><label>Retail Price (€)</label><input type="number" id="f_price" placeholder="0.00" step="0.01" min="0" /></div>
+            <div class="field"><label>Reorder Point</label><input type="number" id="f_reorder" placeholder="5" min="0" /></div>
+            <div class="field"><label>Handle</label><input type="text" id="f_handle" placeholder="signature-soap" /></div>
+            <div class="field"><label>Barcode</label><input type="text" id="f_barcode" placeholder="Optional" /></div>
+            <div class="field"><label>Status</label>
+              <select id="f_active"><option value="Yes">Active</option><option value="No">Inactive</option></select>
+            </div>
+          </div>
+          <button class="btn btn-primary" id="saveCatalogBtn">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+            Save Product
+          </button>
+        </div>
+      </div>
+
+      <!-- Table -->
+      <div class="card">
+        <div class="card-header">
+          <span class="card-title">All Products</span>
+          <div class="search-wrap">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            <input class="search-input" type="text" id="catSearch" placeholder="Search…" />
+          </div>
+        </div>
+        <div class="tbl-wrap">
+          <table>
+            <thead><tr>
+              <th>SKU</th><th>Product</th><th>Variant</th><th>Category</th>
+              <th>Cost</th><th>Retail</th><th>Reorder</th><th>Status</th><th>Actions</th>
+            </tr></thead>
+            <tbody id="catBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- ── TRANSACTIONS ── -->
+    <section class="panel" data-panel="transactions">
+      <div class="page-header">
+        <h1>Transactions</h1>
+        <p>Full log of every stock movement — received, sold, transferred, adjusted.</p>
+      </div>
+
+      <!-- Log form -->
+      <div class="card mb">
+        <div class="card-header"><span class="card-title">Log Transaction</span></div>
+        <div class="form-section">
+          <div class="form-grid">
+            <div class="field"><label>Date</label><input type="date" id="t_date" /></div>
+            <div class="field"><label>SKU</label>
+              <select id="t_sku"><option value="">— select SKU —</option></select>
+            </div>
+            <div class="field"><label>Movement Type</label>
+              <select id="t_type">
+                <option>Received</option><option>Sold</option>
+                <option>Transfer In</option><option>Transfer Out</option>
+                <option>Adjustment In</option><option>Adjustment Out</option>
+                <option>Return In</option><option>Return Out</option>
+              </select>
+            </div>
+            <div class="field"><label>Quantity</label><input type="number" id="t_qty" min="1" placeholder="0" /></div>
+            <div class="field"><label>Location</label>
+              <select id="t_loc"><option>Studio</option><option>Knokke</option><option>Warehouse</option></select>
+            </div>
+            <div class="field"><label>Reference</label><input type="text" id="t_ref" placeholder="PO-001" /></div>
+            <div class="field" style="grid-column:span 2;"><label>Notes</label><input type="text" id="t_notes" placeholder="Optional notes" /></div>
+          </div>
+          <button class="btn btn-primary" id="saveTxBtn">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            Add Transaction
+          </button>
+          <span style="font-size:12px;color:var(--muted);margin-left:12px;">Transfers need two lines: Out from source + In to destination.</span>
+        </div>
+      </div>
+
+      <!-- Table -->
+      <div class="card">
+        <div class="card-header">
+          <span class="card-title">Transaction Log</span>
+          <div class="search-wrap">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            <input class="search-input" type="text" id="txSearch" placeholder="Search…" />
+          </div>
+        </div>
+        <div class="tbl-wrap">
+          <table>
+            <thead><tr>
+              <th>Date</th><th>SKU</th><th>Type</th><th>Qty</th><th>±</th>
+              <th>Location</th><th>Reference</th><th>Notes</th><th></th>
+            </tr></thead>
+            <tbody id="txBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- ── EXCEL SYNC ── -->
+    <section class="panel" data-panel="sync">
+      <div class="page-header">
+        <h1>Excel Sync</h1>
+        <p>Import your Excel file to load all data, or export the current state back to Excel.</p>
+      </div>
+
+      <div class="sync-grid mb">
+        <div class="sync-card">
+          <div class="sync-icon upload">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+          </div>
+          <h3>Import Excel (.xlsx)</h3>
+          <p>Upload your <strong>stock_control_shopify_ready.xlsx</strong> file. All products, transactions and inventory will be loaded instantly.</p>
+          <label class="btn btn-primary file-btn">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+            Choose Excel File
+            <input type="file" id="xlsxUpload" accept=".xlsx,.xls" />
+          </label>
+        </div>
+
+        <div class="sync-card">
+          <div class="sync-icon download">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          </div>
+          <h3>Export to Excel (.xlsx)</h3>
+          <p>Download the current dashboard state as a fully structured Excel file — all tabs included, ready to re-import.</p>
+          <button class="btn btn-green" id="exportXlsxBtn2">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            Download Excel
+          </button>
+        </div>
+
+        <div class="sync-card">
+          <div class="sync-icon demo">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 102.13-9.36L1 10"/></svg>
+          </div>
+          <h3>Load Demo Data</h3>
+          <p>Populate the dashboard with sample products and transactions to explore the system before entering real data.</p>
+          <button class="btn btn-secondary" id="loadDemoBtn">Load Demo</button>
+        </div>
+
+        <div class="sync-card">
+          <div class="sync-icon reset">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a1 1 0 011-1h4a1 1 0 011 1v2"/></svg>
+          </div>
+          <h3>Reset All Data</h3>
+          <p>Clear everything from the dashboard. This only removes data from this browser — your Excel file is untouched.</p>
+          <button class="btn btn-danger" id="resetBtn">Reset Data</button>
+        </div>
+      </div>
+
+      <!-- Last sync info -->
+      <div class="card">
+        <div class="card-header"><span class="card-title">Session Info</span></div>
+        <div style="padding:18px;font-size:13px;color:var(--muted);line-height:1.8;">
+          <div>Products in catalog: <strong id="syncCatalogCount">0</strong></div>
+          <div>Transactions logged: <strong id="syncTxCount">0</strong></div>
+          <div>Last Excel import: <strong id="syncLastImport">Never</strong></div>
+          <div style="margin-top:10px;font-size:12px;">Data is stored in your browser session. Export to Excel to save permanently.</div>
+        </div>
+      </div>
+    </section>
+
+  </div><!-- /content -->
+</div><!-- /main -->
+
+<!-- ════ MODAL: Quick Stock Adjust ════ -->
+<div class="modal-overlay hidden" id="stockModal">
+  <div class="modal">
+    <div class="modal-title" id="stockModalTitle">Adjust Stock</div>
+    <div class="modal-sub" id="stockModalSub">Enter the quantity to add or remove.</div>
+    <div class="form-grid-3">
+      <div class="field"><label>Location</label>
+        <select id="m_loc"><option>Studio</option><option>Knokke</option><option>Warehouse</option></select>
+      </div>
+      <div class="field"><label>Movement</label>
+        <select id="m_type">
+          <option value="Received">Received (+)</option>
+          <option value="Sold">Sold (−)</option>
+          <option value="Adjustment In">Adjustment In (+)</option>
+          <option value="Adjustment Out">Adjustment Out (−)</option>
+          <option value="Return In">Return In (+)</option>
+        </select>
+      </div>
+      <div class="field"><label>Quantity</label>
+        <input type="number" id="m_qty" min="1" placeholder="0" />
+      </div>
+    </div>
+    <div class="field" style="margin-bottom:0;">
+      <label>Notes (optional)</label>
+      <input type="text" id="m_notes" placeholder="e.g. walk-in sale, supplier delivery…" />
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" id="stockModalCancel">Cancel</button>
+      <button class="btn btn-primary" id="stockModalSave">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- ════ TOAST CONTAINER ════ -->
+<div id="toastWrap"></div>
+
+<script>
+// ═══════════════════════════════════════════════════════
+// PASSWORDS
+// ═══════════════════════════════════════════════════════
+const PASSWORDS = [
+  'Amber@2026','StudioKnokke9','InvAccess#4','Warehouse77!',
+  'AMD-secure-12','Knokke$tock1','BlueLedger88','StockVault#3',
+  'Designs2026!','PrivateKey*55'
+];
+const SESSION_KEY = 'am-inv-auth';
+
+function tryLogin() {
+  const pw = document.getElementById('loginPw').value;
+  if (PASSWORDS.includes(pw)) {
+    sessionStorage.setItem(SESSION_KEY, 'true');
+    document.getElementById('loginScreen').classList.add('hidden');
+    document.getElementById('loginErr').classList.remove('show');
+  } else {
+    document.getElementById('loginErr').classList.add('show');
+    document.getElementById('loginPw').value = '';
+    document.getElementById('loginPw').focus();
+  }
+}
+document.getElementById('loginBtn').addEventListener('click', tryLogin);
+document.getElementById('loginPw').addEventListener('keydown', e => { if (e.key === 'Enter') tryLogin(); });
+document.getElementById('logoutBtn').addEventListener('click', () => {
+  sessionStorage.removeItem(SESSION_KEY);
+  location.reload();
+});
+if (sessionStorage.getItem(SESSION_KEY) === 'true') {
+  document.getElementById('loginScreen').classList.add('hidden');
+} else {
+  document.getElementById('loginPw').focus();
+}
+
+// ═══════════════════════════════════════════════════════
+// STATE
+// ═══════════════════════════════════════════════════════
+const SK = 'am-inv-v2';
+let state = { catalog: [], transactions: [], lastImport: null };
+
+function loadState() {
+  try {
+    const r = localStorage.getItem(SK);
+    if (r) state = JSON.parse(r);
+  } catch {}
+}
+function saveState() {
+  localStorage.setItem(SK, JSON.stringify(state));
+}
+loadState();
+
+// ═══════════════════════════════════════════════════════
+// DEMO DATA
+// ═══════════════════════════════════════════════════════
+const DEMO_CATALOG = [
+  { sku:'SKU-001', product:'Signature Soap', variant:'500 ml', category:'Body', vendor:'AMDesigns', handle:'signature-soap', barcode:'', cost:18, price:39, reorder:6, active:'Yes' },
+  { sku:'SKU-002', product:'Signature Soap', variant:'250 ml', category:'Body', vendor:'AMDesigns', handle:'signature-soap', barcode:'', cost:11, price:24, reorder:8, active:'Yes' },
+  { sku:'SKU-003', product:'Stone Candle',   variant:'Standard', category:'Home', vendor:'AMDesigns', handle:'candle-stone', barcode:'', cost:22, price:48, reorder:4, active:'Yes' },
+  { sku:'SKU-004', product:'Face Serum',     variant:'30 ml',  category:'Skin', vendor:'AMDesigns', handle:'face-serum', barcode:'', cost:32, price:72, reorder:5, active:'Yes' },
+  { sku:'SKU-005', product:'Body Lotion',    variant:'200 ml', category:'Body', vendor:'AMDesigns', handle:'body-lotion', barcode:'', cost:14, price:34, reorder:10, active:'Yes' },
+];
+const DEMO_TX = [
+  { date:'2026-04-10', sku:'SKU-001', type:'Received',     qty:30, loc:'Warehouse', ref:'PO-001', notes:'Initial stock', signed:30 },
+  { date:'2026-04-10', sku:'SKU-002', type:'Received',     qty:24, loc:'Warehouse', ref:'PO-001', notes:'Initial stock', signed:24 },
+  { date:'2026-04-10', sku:'SKU-003', type:'Received',     qty:15, loc:'Warehouse', ref:'PO-002', notes:'Initial stock', signed:15 },
+  { date:'2026-04-10', sku:'SKU-004', type:'Received',     qty:20, loc:'Warehouse', ref:'PO-003', notes:'Initial stock', signed:20 },
+  { date:'2026-04-10', sku:'SKU-005', type:'Received',     qty:40, loc:'Warehouse', ref:'PO-003', notes:'Initial stock', signed:40 },
+  { date:'2026-04-12', sku:'SKU-001', type:'Transfer In',  qty:8,  loc:'Studio',    ref:'MV-001', notes:'Studio top-up', signed:8 },
+  { date:'2026-04-12', sku:'SKU-001', type:'Transfer Out', qty:8,  loc:'Warehouse', ref:'MV-001', notes:'Studio top-up', signed:-8 },
+  { date:'2026-04-13', sku:'SKU-002', type:'Transfer In',  qty:6,  loc:'Knokke',   ref:'MV-002', notes:'Knokke stock',  signed:6 },
+  { date:'2026-04-13', sku:'SKU-002', type:'Transfer Out', qty:6,  loc:'Warehouse', ref:'MV-002', notes:'Knokke stock',  signed:-6 },
+  { date:'2026-04-15', sku:'SKU-003', type:'Sold',         qty:2,  loc:'Studio',    ref:'SALE-01',notes:'Walk-in',       signed:-2 },
+  { date:'2026-04-16', sku:'SKU-001', type:'Sold',         qty:3,  loc:'Studio',    ref:'SALE-02',notes:'Online',        signed:-3 },
+  { date:'2026-04-17', sku:'SKU-004', type:'Transfer In',  qty:5,  loc:'Knokke',   ref:'MV-003', notes:'',              signed:5 },
+  { date:'2026-04-17', sku:'SKU-004', type:'Transfer Out', qty:5,  loc:'Warehouse', ref:'MV-003', notes:'',              signed:-5 },
+  { date:'2026-04-18', sku:'SKU-005', type:'Sold',         qty:4,  loc:'Warehouse', ref:'SALE-03',notes:'B2B order',     signed:-4 },
+  { date:'2026-04-19', sku:'SKU-003', type:'Sold',         qty:1,  loc:'Knokke',   ref:'SALE-04',notes:'',              signed:-1 },
+];
+
+// ═══════════════════════════════════════════════════════
+// INVENTORY CALC
+// ═══════════════════════════════════════════════════════
+const LOCS = ['Studio','Knokke','Warehouse'];
+const POSITIVE = ['Received','Transfer In','Adjustment In','Return In'];
+
+function signed(type, qty) {
+  return POSITIVE.includes(type) ? +qty : -qty;
+}
+
+function calcInventory() {
+  return state.catalog.filter(i => i.sku).map(item => {
+    const byLoc = {};
+    LOCS.forEach(loc => {
+      byLoc[loc] = state.transactions
+        .filter(t => t.sku === item.sku && t.loc === loc)
+        .reduce((s, t) => s + signed(t.type, t.qty), 0);
+    });
+    const total = LOCS.reduce((s, l) => s + byLoc[l], 0);
+    const reorder = Number(item.reorder || 0);
+    const status = total <= 0 ? 'Out of stock' : total <= reorder ? 'Reorder' : 'Healthy';
+    return { ...item, ...byLoc, total, status };
+  });
+}
+
+// ═══════════════════════════════════════════════════════
+// NAV
+// ═══════════════════════════════════════════════════════
+const TAB_TITLES = {
+  dashboard:'Dashboard', inventory:'Live Inventory',
+  catalog:'Products', transactions:'Transactions', sync:'Excel Sync'
+};
+document.querySelectorAll('.nav-item[data-tab]').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+    btn.classList.add('active');
+    const key = btn.dataset.tab;
+    document.querySelector(`[data-panel="${key}"]`).classList.add('active');
+    document.getElementById('topbarTitle').textContent = TAB_TITLES[key];
+    if (key === 'sync') renderSync();
+  });
+});
+
+// ═══════════════════════════════════════════════════════
+// TOAST
+// ═══════════════════════════════════════════════════════
+function toast(msg, type = 'default') {
+  const el = document.createElement('div');
+  el.className = `toast ${type}`;
+  el.textContent = msg;
+  document.getElementById('toastWrap').appendChild(el);
+  setTimeout(() => el.remove(), 3200);
+}
+
+// ═══════════════════════════════════════════════════════
+// RENDER: DASHBOARD
+// ═══════════════════════════════════════════════════════
+function renderDashboard() {
+  const inv = calcInventory();
+  const active = state.catalog.filter(i => i.active === 'Yes').length;
+  const units  = inv.reduce((s, i) => s + i.total, 0);
+  const low    = inv.filter(i => i.status !== 'Healthy').length;
+  const value  = inv.reduce((s, i) => s + i.total * (i.cost || 0), 0);
+
+  const badge = document.getElementById('lowBadge');
+  if (low > 0) { badge.textContent = low; badge.classList.remove('hidden'); }
+  else badge.classList.add('hidden');
+
+  document.getElementById('metricsGrid').innerHTML = [
+    ['Active SKUs',    active,        'Products in catalog',      'indigo', '<path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/>'],
+    ['Units on Hand',  units,         'Across all locations',     'green',  '<path d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z"/>'],
+    ['Low Stock',      low,           'Need reorder attention',   'amber',  '<path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>'],
+    ['Stock @ Cost',   fmtCur(value), 'Estimated inventory value','indigo', '<line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 100 7h5a3.5 3.5 0 110 7H6"/>'],
+  ].map(([label, val, note, icon, path]) => `
+    <div class="metric-card">
+      <div class="metric-top">
+        <span class="metric-label">${label}</span>
+        <span class="metric-icon ${icon}">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">${path}</svg>
+        </span>
+      </div>
+      <div class="metric-val">${val}</div>
+      <div class="metric-note">${note}</div>
+    </div>`).join('');
+
+  // Low stock table
+  const lowRows = inv.filter(i => i.status !== 'Healthy').sort((a,b) => a.total - b.total).slice(0,8);
+  document.getElementById('lowStockBody').innerHTML = lowRows.length
+    ? lowRows.map(r => `<tr>
+        <td class="mono">${esc(r.sku)}</td>
+        <td>${esc(r.product)}</td>
+        <td><strong>${r.total}</strong></td>
+        <td>${r.reorder}</td>
+        <td>${badge2(r.status)}</td>
+      </tr>`).join('')
+    : '<tr class="empty-row"><td colspan="5">✓ All products well-stocked</td></tr>';
+
+  // Recent tx
+  const recent = [...state.transactions].sort((a,b) => new Date(b.date)-new Date(a.date)).slice(0,8);
+  document.getElementById('recentTxBody').innerHTML = recent.length
+    ? recent.map(t => `<tr>
+        <td class="mono">${esc(t.date)}</td>
+        <td class="mono">${esc(t.sku)}</td>
+        <td>${txDot(t.type)}</td>
+        <td><strong>${t.qty}</strong></td>
+        <td>${esc(t.loc)}</td>
+      </tr>`).join('')
+    : '<tr class="empty-row"><td colspan="5">No transactions yet</td></tr>';
+}
+
+// ═══════════════════════════════════════════════════════
+// RENDER: INVENTORY
+// ═══════════════════════════════════════════════════════
+function renderInventory() {
+  const q   = document.getElementById('invSearch').value.trim().toLowerCase();
+  const loc = document.getElementById('invLocFilter').value;
+  let rows  = calcInventory().filter(i => {
+    const match = !q || [i.sku, i.product, i.variant].join(' ').toLowerCase().includes(q);
+    return match;
+  });
+
+  document.getElementById('invBody').innerHTML = rows.length
+    ? rows.map(item => {
+        const studioQty    = item['Studio']    || 0;
+        const knokkeQty    = item['Knokke']    || 0;
+        const warehouseQty = item['Warehouse'] || 0;
+
+        function qtyCell(locationName, qty) {
+          if (loc && loc !== locationName) return `<td><span style="color:var(--muted2)">${qty}</span></td>`;
+          return `<td>
+            <div class="qty-cell">
+              <button class="qty-btn minus" onclick="quickStock('${esc(item.sku)}','${locationName}',-1)" title="Remove 1">−</button>
+              <span class="qty-val" style="color:${qty <= 0 ? 'var(--red)' : qty <= item.reorder ? 'var(--amber)' : 'inherit'}">${qty}</span>
+              <button class="qty-btn" onclick="quickStock('${esc(item.sku)}','${locationName}',1)" title="Add 1">+</button>
+            </div>
+          </td>`;
+        }
+
+        return `<tr>
+          <td class="mono">${esc(item.sku)}</td>
+          <td><strong>${esc(item.product)}</strong>${item.variant ? `<br><span style="font-size:11px;color:var(--muted2)">${esc(item.variant)}</span>` : ''}</td>
+          <td>${esc(item.variant || '')}</td>
+          ${qtyCell('Studio', studioQty)}
+          ${qtyCell('Knokke', knokkeQty)}
+          ${qtyCell('Warehouse', warehouseQty)}
+          <td><strong>${item.total}</strong></td>
+          <td>${item.reorder}</td>
+          <td>${badge2(item.status)}</td>
+        </tr>`;
+      }).join('')
+    : '<tr class="empty-row"><td colspan="9">No inventory data — add products and transactions</td></tr>';
+}
+
+// Quick +1/-1 without modal
+window.quickStock = function(sku, loc, delta) {
+  const type = delta > 0 ? 'Adjustment In' : 'Adjustment Out';
+  const tx = {
+    date: today(), sku, type,
+    qty: Math.abs(delta), loc,
+    ref: 'QUICK', notes: `Quick ${delta > 0 ? '+' : '−'}1`,
+    signed: delta
+  };
+  state.transactions.unshift(tx);
+  saveState();
+  renderAll();
+  toast(`${delta > 0 ? '+1' : '−1'} ${sku} @ ${loc}`, delta > 0 ? 'success' : 'error');
+};
+
+// Modal for bulk adjust
+let _modalSku = '';
+window.openStockModal = function(sku) {
+  _modalSku = sku;
+  document.getElementById('stockModalTitle').textContent = `Adjust Stock — ${sku}`;
+  document.getElementById('stockModalSub').textContent = 'Choose location, movement type, and quantity.';
+  document.getElementById('m_qty').value = '';
+  document.getElementById('m_notes').value = '';
+  document.getElementById('stockModal').classList.remove('hidden');
+  document.getElementById('m_qty').focus();
+};
+document.getElementById('stockModalCancel').addEventListener('click', () => {
+  document.getElementById('stockModal').classList.add('hidden');
+});
+document.getElementById('stockModalSave').addEventListener('click', () => {
+  const loc   = document.getElementById('m_loc').value;
+  const type  = document.getElementById('m_type').value;
+  const qty   = Number(document.getElementById('m_qty').value || 0);
+  const notes = document.getElementById('m_notes').value.trim();
+  if (!qty || qty < 1) { toast('Enter a quantity', 'error'); return; }
+  const tx = { date: today(), sku: _modalSku, type, qty, loc, ref: 'ADJUST', notes, signed: signed(type, qty) };
+  state.transactions.unshift(tx);
+  saveState();
+  renderAll();
+  document.getElementById('stockModal').classList.add('hidden');
+  toast(`Stock adjusted: ${_modalSku} ${signed(type,qty) >= 0 ? '+' : ''}${signed(type,qty)} @ ${loc}`, 'success');
+});
+
+// ═══════════════════════════════════════════════════════
+// RENDER: CATALOG
+// ═══════════════════════════════════════════════════════
+let _editSku = null;
+
+function renderCatalog() {
+  const q = document.getElementById('catSearch').value.trim().toLowerCase();
+  const rows = state.catalog.filter(i => !q || [i.sku,i.product,i.variant,i.category,i.vendor].join(' ').toLowerCase().includes(q));
+
+  document.getElementById('catBody').innerHTML = rows.length
+    ? rows.map((item, idx) => `<tr>
+        <td class="mono">${esc(item.sku)}</td>
+        <td><strong>${esc(item.product)}</strong></td>
+        <td>${esc(item.variant||'')}</td>
+        <td>${esc(item.category||'')}</td>
+        <td>${fmtCur(item.cost||0)}</td>
+        <td>${fmtCur(item.price||0)}</td>
+        <td>${item.reorder||0}</td>
+        <td>${item.active==='Yes'
+          ? '<span class="badge badge-green">Active</span>'
+          : '<span class="badge badge-red">Inactive</span>'}</td>
+        <td style="display:flex;gap:6px;flex-wrap:wrap;">
+          <button class="btn btn-ghost btn-sm" onclick="editProduct('${esc(item.sku)}')">Edit</button>
+          <button class="btn btn-secondary btn-sm" onclick="openStockModal('${esc(item.sku)}')">Stock</button>
+          <button class="btn btn-danger btn-sm" onclick="deleteProduct('${esc(item.sku)}')">Delete</button>
+        </td>
+      </tr>`).join('')
+    : '<tr class="empty-row"><td colspan="9">No products yet — add one above</td></tr>';
+}
+
+document.getElementById('saveCatalogBtn').addEventListener('click', () => {
+  const sku = document.getElementById('f_sku').value.trim().toUpperCase();
+  const product = document.getElementById('f_product').value.trim();
+  if (!sku || !product) { toast('SKU and Product Name are required', 'error'); return; }
+
+  const row = {
+    sku, product,
+    variant:  document.getElementById('f_variant').value.trim(),
+    category: document.getElementById('f_category').value.trim(),
+    vendor:   document.getElementById('f_vendor').value.trim(),
+    handle:   document.getElementById('f_handle').value.trim() || sku.toLowerCase(),
+    barcode:  document.getElementById('f_barcode').value.trim(),
+    cost:     Number(document.getElementById('f_cost').value  || 0),
+    price:    Number(document.getElementById('f_price').value || 0),
+    reorder:  Number(document.getElementById('f_reorder').value || 0),
+    active:   document.getElementById('f_active').value,
+  };
+
+  const existing = state.catalog.findIndex(i => i.sku === sku);
+  if (existing >= 0) { state.catalog[existing] = row; toast(`Updated ${sku}`, 'success'); }
+  else { state.catalog.unshift(row); toast(`Added ${sku}`, 'success'); }
+
+  resetCatalogForm();
+  saveState();
+  renderAll();
+});
+
+window.editProduct = function(sku) {
+  const item = state.catalog.find(i => i.sku === sku);
+  if (!item) return;
+  _editSku = sku;
+  document.getElementById('f_sku').value      = item.sku;
+  document.getElementById('f_product').value  = item.product;
+  document.getElementById('f_variant').value  = item.variant  || '';
+  document.getElementById('f_category').value = item.category || '';
+  document.getElementById('f_vendor').value   = item.vendor   || '';
+  document.getElementById('f_handle').value   = item.handle   || '';
+  document.getElementById('f_barcode').value  = item.barcode  || '';
+  document.getElementById('f_cost').value     = item.cost     || '';
+  document.getElementById('f_price').value    = item.price    || '';
+  document.getElementById('f_reorder').value  = item.reorder  || '';
+  document.getElementById('f_active').value   = item.active   || 'Yes';
+  document.getElementById('catalogFormTitle').textContent = `Editing: ${sku}`;
+  document.getElementById('cancelEditBtn').style.display = '';
+  document.getElementById('catalogFormCard').scrollIntoView({ behavior:'smooth', block:'start' });
+};
+
+document.getElementById('cancelEditBtn').addEventListener('click', resetCatalogForm);
+
+function resetCatalogForm() {
+  ['f_sku','f_product','f_variant','f_category','f_vendor','f_handle','f_barcode','f_cost','f_price','f_reorder'].forEach(id => document.getElementById(id).value = '');
+  document.getElementById('f_active').value = 'Yes';
+  document.getElementById('catalogFormTitle').textContent = 'Add Product';
+  document.getElementById('cancelEditBtn').style.display = 'none';
+  _editSku = null;
+}
+
+window.deleteProduct = function(sku) {
+  if (!confirm(`Delete ${sku} from catalog? Transactions are kept.`)) return;
+  state.catalog = state.catalog.filter(i => i.sku !== sku);
+  saveState(); renderAll();
+  toast(`Deleted ${sku}`, 'error');
+};
+
+document.getElementById('catSearch').addEventListener('input', renderCatalog);
+
+// ═══════════════════════════════════════════════════════
+// RENDER: TRANSACTIONS
+// ═══════════════════════════════════════════════════════
+function fillSkuSelect() {
+  const sel = document.getElementById('t_sku');
+  const cur = sel.value;
+  sel.innerHTML = state.catalog.length
+    ? state.catalog.map(i => `<option value="${esc(i.sku)}">${esc(i.sku)} – ${esc(i.product)}</option>`).join('')
+    : '<option value="">No products yet</option>';
+  if ([...sel.options].some(o => o.value === cur)) sel.value = cur;
+}
+
+function renderTransactions() {
+  const q = document.getElementById('txSearch').value.trim().toLowerCase();
+  const rows = [...state.transactions]
+    .filter(t => !q || [t.date,t.sku,t.type,t.loc,t.ref,t.notes].join(' ').toLowerCase().includes(q))
+    .sort((a,b) => new Date(b.date) - new Date(a.date));
+
+  document.getElementById('txBody').innerHTML = rows.length
+    ? rows.map((t, idx) => {
+        const s = signed(t.type, t.qty);
+        return `<tr>
+          <td class="mono">${esc(t.date)}</td>
+          <td class="mono">${esc(t.sku)}</td>
+          <td>${txDot(t.type)}</td>
+          <td><strong>${t.qty}</strong></td>
+          <td style="font-weight:700;color:${s>=0?'var(--green)':'var(--red)'}">${s>=0?'+':''}${s}</td>
+          <td>${esc(t.loc)}</td>
+          <td class="mono">${esc(t.ref||'')}</td>
+          <td>${esc(t.notes||'')}</td>
+          <td><button class="btn btn-danger btn-sm" onclick="deleteTx(${idx})">✕</button></td>
+        </tr>`;
+      }).join('')
+    : '<tr class="empty-row"><td colspan="9">No transactions yet</td></tr>';
+}
+
+document.getElementById('saveTxBtn').addEventListener('click', () => {
+  const date = document.getElementById('t_date').value;
+  const sku  = document.getElementById('t_sku').value;
+  const type = document.getElementById('t_type').value;
+  const qty  = Number(document.getElementById('t_qty').value || 0);
+  const loc  = document.getElementById('t_loc').value;
+  const ref  = document.getElementById('t_ref').value.trim();
+  const notes= document.getElementById('t_notes').value.trim();
+
+  if (!date || !sku || !qty) { toast('Fill in date, SKU, and quantity', 'error'); return; }
+
+  const tx = { date, sku, type, qty, loc, ref, notes, signed: signed(type, qty) };
+  state.transactions.unshift(tx);
+  document.getElementById('t_qty').value = '';
+  document.getElementById('t_ref').value = '';
+  document.getElementById('t_notes').value = '';
+  saveState(); renderAll();
+  toast(`Transaction saved: ${sku} ${signed(type,qty)>=0?'+':''}${signed(type,qty)}`, 'success');
+});
+
+window.deleteTx = function(idx) {
+  const q = document.getElementById('txSearch').value.trim().toLowerCase();
+  const sorted = [...state.transactions]
+    .filter(t => !q || [t.date,t.sku,t.type,t.loc,t.ref,t.notes].join(' ').toLowerCase().includes(q))
+    .sort((a,b) => new Date(b.date) - new Date(a.date));
+  const row = sorted[idx];
+  state.transactions = state.transactions.filter(t => t !== row);
+  saveState(); renderAll();
+  toast('Transaction removed', 'error');
+};
+
+document.getElementById('txSearch').addEventListener('input', renderTransactions);
+document.getElementById('invSearch').addEventListener('input', renderInventory);
+document.getElementById('invLocFilter').addEventListener('change', renderInventory);
+
+// ═══════════════════════════════════════════════════════
+// RENDER: SYNC
+// ═══════════════════════════════════════════════════════
+function renderSync() {
+  document.getElementById('syncCatalogCount').textContent = state.catalog.length;
+  document.getElementById('syncTxCount').textContent      = state.transactions.length;
+  document.getElementById('syncLastImport').textContent   = state.lastImport || 'Never';
+}
+
+// ═══════════════════════════════════════════════════════
+// EXCEL IMPORT
+// ═══════════════════════════════════════════════════════
+document.getElementById('xlsxUpload').addEventListener('change', function(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = function(ev) {
+    try {
+      const wb = XLSX.read(ev.target.result, { type: 'array', cellDates: true });
+
+      // — Catalog sheet —
+      const catSheet = wb.Sheets['Catalog'] || wb.Sheets[wb.SheetNames[0]];
+      const catRows  = XLSX.utils.sheet_to_json(catSheet, { defval: '' });
+      if (catRows.length) {
+        state.catalog = catRows
+          .filter(r => r.SKU || r.sku)
+          .map(r => ({
+            sku:      String(r.SKU      || r.sku      || '').trim().toUpperCase(),
+            product:  String(r.Product  || r.product  || r.Title || '').trim(),
+            variant:  String(r.Variant  || r.variant  || '').trim(),
+            category: String(r.Category || r.category || '').trim(),
+            vendor:   String(r.Vendor   || r.vendor   || '').trim(),
+            handle:   String(r.Handle   || r.handle   || '').trim(),
+            barcode:  String(r.Barcode  || r.barcode  || '').trim(),
+            cost:     Number(r.Cost     || r['Cost per item'] || r.cost    || 0),
+            price:    Number(r['Retail Price'] || r['Variant Price'] || r.price || 0),
+            reorder:  Number(r['Reorder Point'] || r.reorder || 0),
+            active:   String(r.Active   || r.active   || 'Yes').trim(),
+          }));
+      }
+
+      // — Transactions sheet —
+      const txSheet = wb.Sheets['Transactions'];
+      if (txSheet) {
+        const txRows = XLSX.utils.sheet_to_json(txSheet, { defval: '' });
+        state.transactions = txRows
+          .filter(r => r.SKU || r.sku)
+          .map(r => {
+            const type = String(r['Movement Type'] || r.movementType || r.Type || 'Received').trim();
+            const qty  = Number(r.Qty || r.qty || 0);
+            const rawDate = r.Date || r.date || '';
+            let dateStr = '';
+            if (rawDate instanceof Date) dateStr = rawDate.toISOString().slice(0,10);
+            else dateStr = String(rawDate).slice(0,10);
+            return {
+              date:   dateStr,
+              sku:    String(r.SKU || r.sku || '').trim().toUpperCase(),
+              type,
+              qty,
+              loc:    String(r.Location || r.loc || 'Warehouse').trim(),
+              ref:    String(r.Reference || r.ref || '').trim(),
+              notes:  String(r.Notes || r.notes || '').trim(),
+              signed: signed(type, qty),
+            };
+          });
+      }
+
+      state.lastImport = new Date().toLocaleString();
+      saveState();
+      renderAll();
+      toast(`Imported ${state.catalog.length} products, ${state.transactions.length} transactions ✓`, 'success');
+    } catch(err) {
+      toast('Import failed — check file format', 'error');
+      console.error(err);
+    }
+    e.target.value = '';
+  };
+  reader.readAsArrayBuffer(file);
+});
+
+// ═══════════════════════════════════════════════════════
+// EXCEL EXPORT
+// ═══════════════════════════════════════════════════════
+function exportXlsx() {
+  const wb = XLSX.utils.book_new();
+  const inv = calcInventory();
+
+  // Catalog
+  const catData = state.catalog.map(i => ({
+    SKU: i.sku, Product: i.product, Variant: i.variant || '',
+    Category: i.category || '', Vendor: i.vendor || '',
+    Handle: i.handle || '', Barcode: i.barcode || '',
+    Cost: i.cost || 0, 'Retail Price': i.price || 0,
+    'Reorder Point': i.reorder || 0, Active: i.active || 'Yes',
+  }));
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(catData), 'Catalog');
+
+  // Transactions
+  const txData = state.transactions.map(t => ({
+    Date: t.date, SKU: t.sku, 'Movement Type': t.type,
+    Qty: t.qty, Location: t.loc, Reference: t.ref || '',
+    Notes: t.notes || '', 'Signed Qty': signed(t.type, t.qty),
+  }));
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(txData.length ? txData : [{}]), 'Transactions');
+
+  // Inventory Live
+  const invData = inv.map(i => ({
+    SKU: i.sku, Product: i.product, Variant: i.variant || '',
+    Studio: i['Studio'] || 0, Knokke: i['Knokke'] || 0,
+    Warehouse: i['Warehouse'] || 0, Total: i.total,
+    'Reorder Point': i.reorder, Status: i.status,
+    'Cost per unit': i.cost || 0,
+    'Stock @ Cost': i.total * (i.cost || 0),
+    'Stock @ Retail': i.total * (i.price || 0),
+  }));
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(invData.length ? invData : [{}]), 'Inventory_Live');
+
+  // Dashboard summary
+  const summary = [
+    { Metric: 'Active SKUs',    Value: state.catalog.filter(i=>i.active==='Yes').length },
+    { Metric: 'Units on Hand',  Value: inv.reduce((s,i)=>s+i.total,0) },
+    { Metric: 'Low Stock Items',Value: inv.filter(i=>i.status!=='Healthy').length },
+    { Metric: 'Stock @ Cost',   Value: inv.reduce((s,i)=>s+i.total*(i.cost||0),0) },
+    { Metric: 'Exported At',    Value: new Date().toLocaleString() },
+  ];
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(summary), 'Dashboard');
+
+  XLSX.writeFile(wb, `amdesigns_inventory_${today()}.xlsx`);
+  toast('Excel downloaded ✓', 'success');
+}
+
+document.getElementById('exportXlsxBtn').addEventListener('click', exportXlsx);
+document.getElementById('exportXlsxBtn2').addEventListener('click', exportXlsx);
+
+// ═══════════════════════════════════════════════════════
+// DEMO & RESET
+// ═══════════════════════════════════════════════════════
+document.getElementById('loadDemoBtn').addEventListener('click', () => {
+  if (!confirm('Load demo data? This will replace current data.')) return;
+  state.catalog      = structuredClone(DEMO_CATALOG);
+  state.transactions = structuredClone(DEMO_TX);
+  state.lastImport   = 'Demo data loaded';
+  saveState(); renderAll();
+  toast('Demo data loaded ✓', 'success');
+});
+
+document.getElementById('resetBtn').addEventListener('click', () => {
+  if (!confirm('Clear ALL data from this browser? Your Excel file is not affected.')) return;
+  state = { catalog: [], transactions: [], lastImport: null };
+  saveState(); renderAll();
+  toast('All data cleared', 'error');
+});
+
+// ═══════════════════════════════════════════════════════
+// HELPERS
+// ═══════════════════════════════════════════════════════
+function badge2(status) {
+  if (status === 'Healthy')     return '<span class="badge badge-green">Healthy</span>';
+  if (status === 'Reorder')     return '<span class="badge badge-amber">Reorder</span>';
+  return '<span class="badge badge-red">Out of stock</span>';
+}
+function txDot(type) {
+  const pos = POSITIVE.includes(type);
+  return `<span style="display:inline-flex;align-items:center;gap:5px;font-size:12px;">
+    <span style="width:6px;height:6px;border-radius:50%;background:${pos?'var(--green)':'var(--red)'};flex-shrink:0;"></span>
+    ${esc(type)}
+  </span>`;
+}
+function fmtCur(v) {
+  return new Intl.NumberFormat('en-BE',{style:'currency',currency:'EUR'}).format(Number(v||0));
+}
+function esc(s) {
+  return String(s??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+function today() {
+  return new Date().toISOString().slice(0,10);
+}
+
+// ═══════════════════════════════════════════════════════
+// RENDER ALL
+// ═══════════════════════════════════════════════════════
+function renderAll() {
+  renderDashboard();
+  renderInventory();
+  renderCatalog();
+  renderTransactions();
+  renderSync();
+  fillSkuSelect();
+}
+
+// Init
+document.getElementById('t_date').value = today();
+renderAll();
+</script>
+</body>
+</html>
