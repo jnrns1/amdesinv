@@ -1,12 +1,11 @@
 {
   "name": "amdesigns-inventory",
-  "version": "2.0.0",
-  "description": "AMDesigns inventory dashboard — static, Vercel-ready",
+  "version": "2.1.0",
+  "description": "AMDesigns inventory dashboard — Vercel static + KV serverless sync",
   "scripts": {
-    "start": "npx serve .",
-    "dev":   "npx serve ."
+    "dev": "npx serve ."
   },
   "engines": {
-    "node": ">=18.0.0"
+    "node": ">=20.0.0"
   }
 }

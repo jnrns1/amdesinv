@@ -366,6 +366,23 @@
     .sync-card p { font-size: 12.5px; color: var(--muted); margin-bottom: 14px; line-height: 1.5; }
 
     /* ════════════════════════════════
+       SYNC STATUS BAR
+    ════════════════════════════════ */
+    #syncBar {
+      display: flex; align-items: center; gap: 8px;
+      font-size: 12px; color: var(--muted2);
+    }
+    .sync-dot {
+      width: 7px; height: 7px; border-radius: 50%;
+      background: var(--muted2); flex-shrink: 0;
+      transition: background .3s;
+    }
+    .sync-dot.ok      { background: var(--green); }
+    .sync-dot.saving  { background: var(--amber); animation: pulse .8s infinite; }
+    .sync-dot.error   { background: var(--red); }
+    @keyframes pulse  { 0%,100%{opacity:1} 50%{opacity:.3} }
+
+    /* ════════════════════════════════
        RESPONSIVE
     ════════════════════════════════ */
     @media (max-width: 1100px) {
@@ -462,6 +479,10 @@
   <header class="topbar">
     <span class="topbar-title" id="topbarTitle">Dashboard</span>
     <div class="topbar-right">
+      <div id="syncBar" title="Sync status">
+        <span class="sync-dot" id="syncDot"></span>
+        <span id="syncLabel">Connecting…</span>
+      </div>
       <button class="btn btn-secondary" id="exportXlsxBtn">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
         Export Excel
@@ -1386,6 +1407,135 @@ function renderAll() {
 // Init
 document.getElementById('t_date').value = today();
 renderAll();
+
+// ═══════════════════════════════════════════════════════
+// CLOUD SYNC  (Vercel KV via /api/data)
+// Every change pushes to the server.
+// Polls every 30s so other users' changes appear automatically.
+// Falls back gracefully if KV isn't configured yet.
+// ═══════════════════════════════════════════════════════
+const API = '/api/data';
+let _lastRemoteHash = '';
+let _saveTimer = null;
+let _syncing = false;
+
+function stateHash(s) {
+  // cheap fingerprint — length + last tx date
+  return `${s.catalog.length}:${s.transactions.length}:${(s.transactions[0]||{}).date||''}:${s.lastSaved||''}`;
+}
+
+function setSyncStatus(status, label) {
+  const dot = document.getElementById('syncDot');
+  const lbl = document.getElementById('syncLabel');
+  dot.className = 'sync-dot ' + status;
+  lbl.textContent = label;
+}
+
+// Push current state to server (debounced 800ms so rapid clicks don't spam)
+function pushState() {
+  clearTimeout(_saveTimer);
+  _saveTimer = setTimeout(async () => {
+    if (_syncing) return;
+    _syncing = true;
+    setSyncStatus('saving', 'Saving…');
+    try {
+      const res = await fetch(API, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(state),
+      });
+      const json = await res.json();
+      if (json.ok) {
+        _lastRemoteHash = stateHash(json.data);
+        setSyncStatus('ok', 'Saved · ' + new Date().toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'}));
+      } else if (json.error === 'KV_NOT_CONFIGURED') {
+        setSyncStatus('error', 'KV not set up yet');
+      } else {
+        setSyncStatus('error', 'Save failed');
+      }
+    } catch {
+      setSyncStatus('error', 'Offline');
+    }
+    _syncing = false;
+  }, 800);
+}
+
+// Pull latest state from server
+async function pullState() {
+  try {
+    const res  = await fetch(API);
+    const json = await res.json();
+
+    if (!json.ok || !json.data) {
+      if (json.error === 'KV_NOT_CONFIGURED') {
+        setSyncStatus('error', 'KV not set up — see setup guide');
+      }
+      return;
+    }
+
+    const remote = json.data;
+    const hash   = stateHash(remote);
+
+    // Only update if remote is newer than what we have
+    if (hash !== _lastRemoteHash && remote.lastSaved !== state.lastSaved) {
+      _lastRemoteHash = hash;
+      state = remote;
+      saveState(); // persist locally too
+      renderAll();
+      setSyncStatus('ok', 'Updated · ' + new Date().toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'}));
+    } else {
+      setSyncStatus('ok', 'Live · ' + new Date().toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'}));
+    }
+  } catch {
+    setSyncStatus('error', 'Offline');
+  }
+}
+
+// Hook every state-mutating action to also push
+const _origSaveState = saveState;
+// Wrap saveState so every local save also triggers a cloud push
+window.saveState = function() {
+  _origSaveState();
+  pushState();
+};
+
+// Initial load from server (overrides localStorage if server has newer data)
+(async () => {
+  setSyncStatus('saving', 'Connecting…');
+  try {
+    const res  = await fetch(API);
+    const json = await res.json();
+    if (json.ok && json.data && json.data.catalog) {
+      const remote = json.data;
+      // Use remote if it has more data or is newer
+      const remoteNewer = (remote.lastSaved || '') > (state.lastSaved || '');
+      const remoteHasMore = remote.catalog.length > state.catalog.length || remote.transactions.length > state.transactions.length;
+      if (remoteNewer || remoteHasMore) {
+        state = remote;
+        saveState();
+        renderAll();
+      }
+      _lastRemoteHash = stateHash(remote);
+      setSyncStatus('ok', 'Live · ' + new Date().toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'}));
+    } else if (json.error === 'KV_NOT_CONFIGURED') {
+      setSyncStatus('error', 'KV not set up yet');
+    } else {
+      // No remote data yet — push our local state up
+      if (state.catalog.length > 0) pushState();
+      setSyncStatus('ok', 'Ready (local)');
+    }
+  } catch {
+    setSyncStatus('error', 'Offline — local only');
+  }
+})();
+
+// Poll every 30 seconds
+setInterval(pullState, 30000);
+
+// Also poll when tab becomes visible again (user switching back)
+document.addEventListener('visibilitychange', () => {
+  if (!document.hidden) pullState();
+});
 </script>
 </body>
 </html>
