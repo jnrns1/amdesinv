@@ -1,74 +1,72 @@
 /**
- * api/data.js  —  Vercel Serverless Function
+ * api/data.js — Vercel Serverless Function
  *
- * GET  /api/data        → returns current inventory state as JSON
- * POST /api/data        → saves new state, returns saved state
+ * GET  /api/data  → read inventory state from Edge Config
+ * POST /api/data  → write inventory state to Edge Config
  *
- * Storage: Vercel KV (free tier — set up once in Vercel dashboard)
- * Env vars required (auto-injected when you link KV store):
- *   KV_REST_API_URL
- *   KV_REST_API_TOKEN
+ * Required env vars (auto-injected when you link Edge Config in Vercel):
+ *   EDGE_CONFIG          — connection string, e.g. https://edge-config.vercel.com/ecfg_xxx?token=xxx
+ *   EDGE_CONFIG_TOKEN    — your Vercel API token (create at vercel.com/account/tokens)
+ *   EDGE_CONFIG_ID       — your Edge Config store ID, e.g. ecfg_xxxxxxxxxxxxxxxx
  */
 
-const KV_KEY = 'amdesigns-inventory-state';
+import { get } from '@vercel/edge-config';
 
-// ── tiny KV helper (uses Vercel KV REST API directly, no SDK needed) ──
-async function kvGet() {
-  const res = await fetch(
-    `${process.env.KV_REST_API_URL}/get/${KV_KEY}`,
-    { headers: { Authorization: `Bearer ${process.env.KV_REST_API_TOKEN}` } }
-  );
-  if (!res.ok) return null;
-  const json = await res.json();
-  return json.result ? JSON.parse(json.result) : null;
+const EDGE_KEY = 'inventory';
+
+async function edgeRead() {
+  // Uses the EDGE_CONFIG connection string env var automatically
+  return await get(EDGE_KEY);
 }
 
-async function kvSet(value) {
+async function edgeWrite(data) {
   const res = await fetch(
-    `${process.env.KV_REST_API_URL}/set/${KV_KEY}`,
+    `https://api.vercel.com/v1/edge-config/${process.env.EDGE_CONFIG_ID}/items`,
     {
-      method: 'POST',
+      method: 'PATCH',
       headers: {
-        Authorization: `Bearer ${process.env.KV_REST_API_TOKEN}`,
+        Authorization: `Bearer ${process.env.EDGE_CONFIG_TOKEN}`,
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({ value: JSON.stringify(value) }),
+      body: JSON.stringify({
+        items: [{ operation: 'upsert', key: EDGE_KEY, value: data }],
+      }),
     }
   );
-  return res.ok;
+  if (!res.ok) {
+    const text = await res.text();
+    throw new Error(`Edge Config write failed: ${text}`);
+  }
+  return true;
 }
 
 export default async function handler(req, res) {
-  // CORS — allow your Vercel domain and localhost
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+  if (req.method === 'OPTIONS') return res.status(200).end();
 
-  if (req.method === 'OPTIONS') {
-    return res.status(200).end();
+  const configured =
+    process.env.EDGE_CONFIG &&
+    process.env.EDGE_CONFIG_TOKEN &&
+    process.env.EDGE_CONFIG_ID;
+
+  if (!configured) {
+    return res.status(200).json({ ok: false, error: 'EDGE_NOT_CONFIGURED', data: null });
   }
 
-  // ── KV not configured — fallback so local dev still works ──
-  if (!process.env.KV_REST_API_URL || !process.env.KV_REST_API_TOKEN) {
-    if (req.method === 'GET') {
-      return res.status(200).json({ ok: false, error: 'KV_NOT_CONFIGURED', data: null });
-    }
-    if (req.method === 'POST') {
-      return res.status(200).json({ ok: false, error: 'KV_NOT_CONFIGURED' });
-    }
-  }
-
-  // ── GET ──
+  // ── GET ──────────────────────────────────────────────────────────────
   if (req.method === 'GET') {
     try {
-      const data = await kvGet();
-      return res.status(200).json({ ok: true, data });
+      const data = await edgeRead();
+      return res.status(200).json({ ok: true, data: data || null });
     } catch (err) {
+      console.error('GET /api/data:', err.message);
       return res.status(500).json({ ok: false, error: err.message });
     }
   }
 
-  // ── POST ──
+  // ── POST ─────────────────────────────────────────────────────────────
   if (req.method === 'POST') {
     try {
       let body = req.body;
@@ -78,11 +76,11 @@ export default async function handler(req, res) {
       if (!body || typeof body !== 'object') {
         return res.status(400).json({ ok: false, error: 'Invalid body' });
       }
-      // Always stamp the save time
       body.lastSaved = new Date().toISOString();
-      await kvSet(body);
+      await edgeWrite(body);
       return res.status(200).json({ ok: true, data: body });
     } catch (err) {
+      console.error('POST /api/data:', err.message);
       return res.status(500).json({ ok: false, error: err.message });
     }
   }

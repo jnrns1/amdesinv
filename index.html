@@ -1448,8 +1448,8 @@ function pushState() {
       if (json.ok) {
         _lastRemoteHash = stateHash(json.data);
         setSyncStatus('ok', 'Saved · ' + new Date().toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'}));
-      } else if (json.error === 'KV_NOT_CONFIGURED') {
-        setSyncStatus('error', 'KV not set up yet');
+      } else if (json.error === 'EDGE_NOT_CONFIGURED') {
+        setSyncStatus('error', 'Edge Config not set up yet');
       } else {
         setSyncStatus('error', 'Save failed');
       }
@@ -1467,8 +1467,8 @@ async function pullState() {
     const json = await res.json();
 
     if (!json.ok || !json.data) {
-      if (json.error === 'KV_NOT_CONFIGURED') {
-        setSyncStatus('error', 'KV not set up — see setup guide');
+      if (json.error === 'EDGE_NOT_CONFIGURED') {
+        setSyncStatus('error', 'Blob not set up — see setup guide');
       }
       return;
     }
@@ -1517,8 +1517,8 @@ window.saveState = function() {
       }
       _lastRemoteHash = stateHash(remote);
       setSyncStatus('ok', 'Live · ' + new Date().toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'}));
-    } else if (json.error === 'KV_NOT_CONFIGURED') {
-      setSyncStatus('error', 'KV not set up yet');
+    } else if (json.error === 'EDGE_NOT_CONFIGURED') {
+      setSyncStatus('error', 'Edge Config not set up yet');
     } else {
       // No remote data yet — push our local state up
       if (state.catalog.length > 0) pushState();

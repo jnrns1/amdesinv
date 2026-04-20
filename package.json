@@ -1,9 +1,12 @@
 {
   "name": "amdesigns-inventory",
-  "version": "2.1.0",
-  "description": "AMDesigns inventory dashboard — Vercel static + KV serverless sync",
+  "version": "2.3.0",
+  "description": "AMDesigns inventory dashboard — Vercel static + Edge Config sync",
   "scripts": {
     "dev": "npx serve ."
+  },
+  "dependencies": {
+    "@vercel/edge-config": "^1.3.0"
   },
   "engines": {
     "node": ">=20.0.0"

@@ -1,7 +1,9 @@
 {
   "version": 2,
   "functions": {
-    "api/data.js": { "runtime": "nodejs20.x" }
+    "api/data.js": {
+      "runtime": "nodejs20.x"
+    }
   },
   "routes": [
     { "src": "/api/data", "dest": "/api/data.js" },
