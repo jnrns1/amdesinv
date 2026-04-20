@@ -1468,7 +1468,7 @@ async function pullState() {
 
     if (!json.ok || !json.data) {
       if (json.error === 'EDGE_NOT_CONFIGURED') {
-        setSyncStatus('error', 'Blob not set up — see setup guide');
+        setSyncStatus('error', 'Edge Config not configured — check EDGE_CONFIG env var');
       }
       return;
     }
